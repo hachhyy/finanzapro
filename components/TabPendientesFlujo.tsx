@@ -94,7 +94,9 @@ export function TabPendientesFlujo({
   const [itemFolder, setItemFolder] = useState('');
   const [itemMode, setItemMode] = useState<'single' | 'subitems'>('single');
   const [itemAmount, setItemAmount] = useState('');
-  const [itemSubItems, setItemSubItems] = useState<SubItem[]>([]);
+  const [itemSubItems, setItemSubItems] = useState<
+    (SubItem & { rawAmount?: string })[]
+  >([]);
   const [confirmDeleteItem, setConfirmDeleteItem] = useState(false);
 
   // 4. Cobrar / Pagar (Liquidación Total o Parcial) Sheet
@@ -165,34 +167,50 @@ export function TabPendientesFlujo({
     setItemName(item.name);
     setItemFolder(item.folder || '');
     setItemMode(item.mode);
-    setItemAmount(String(item.amount));
-    setItemSubItems(item.subItems.map((s) => ({ ...s })));
+    setItemAmount(item.amount > 0 ? String(item.amount) : '');
+    setItemSubItems(
+      item.subItems.map((s) => ({
+        ...s,
+        rawAmount: s.amount > 0 ? String(s.amount) : '',
+      }))
+    );
     setConfirmDeleteItem(false);
+  };
+
+  const parseDecimal = (raw: string | number | undefined): number => {
+    if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0;
+    if (!raw) return 0;
+    const normalized = String(raw).trim().replace(',', '.');
+    const parsed = parseFloat(normalized);
+    return Number.isFinite(parsed) ? Number(parsed.toFixed(2)) : 0;
   };
 
   const handleSavePendingItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItem || !itemName.trim()) return;
 
-    const cleanSubItems = itemSubItems
-      .filter((s) => s.name.trim() !== '' || s.amount > 0)
-      .map((s, idx) => ({
-        ...s,
-        name: s.name.trim() || `Cuota ${idx + 1}`,
-        amount: Number.isFinite(Number(s.amount)) ? Number(s.amount) : 0,
-      }));
+    const cleanSubItems: SubItem[] = itemSubItems
+      .map((s, idx) => {
+        const amt = parseDecimal(s.rawAmount ?? s.amount);
+        return {
+          id: s.id,
+          name: s.name.trim() || `Cuota ${idx + 1}`,
+          amount: amt,
+          completed: s.completed,
+        };
+      })
+      .filter((s) => s.name.trim() !== '' || s.amount > 0);
 
-    const computedSubSum = cleanSubItems
-      .filter((s) => !s.completed)
-      .reduce((acc, s) => acc + s.amount, 0);
+    const computedSubSum = Number(
+      cleanSubItems
+        .filter((s) => !s.completed)
+        .reduce((acc, s) => acc + s.amount, 0)
+        .toFixed(2)
+    );
 
-    const parsedSingle = parseFloat(itemAmount.replace(',', '.'));
+    const parsedSingle = parseDecimal(itemAmount);
     const finalAmount =
-      itemMode === 'subitems'
-        ? computedSubSum
-        : Number.isFinite(parsedSingle)
-        ? parsedSingle
-        : 0;
+      itemMode === 'subitems' ? computedSubSum : parsedSingle;
 
     onUpsertPendingItem({
       ...editingItem,
@@ -867,6 +885,7 @@ export function TabPendientesFlujo({
                             ? 'Cuota 1'
                             : 'Sub-pago 1',
                         amount: 0,
+                        rawAmount: '',
                         completed: false,
                       },
                     ]);
@@ -888,11 +907,16 @@ export function TabPendientesFlujo({
                   Importe Pendiente (€)
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={itemAmount}
-                  onChange={(e) => setItemAmount(e.target.value)}
-                  placeholder="0.00"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^[0-9]*[.,]?[0-9]*$/.test(v)) {
+                      setItemAmount(v);
+                    }
+                  }}
+                  placeholder="0,00"
                   className="w-full px-4 py-3.5 rounded-2xl bg-black border border-[#2C2C2E] text-2xl font-bold text-white focus:outline-none focus:border-[#10B981]"
                 />
               </div>
@@ -913,6 +937,7 @@ export function TabPendientesFlujo({
                             editingItem.type === 'debt' ? 'Cuota' : 'Sub-pago'
                           } ${prev.length + 1}`,
                           amount: 0,
+                          rawAmount: '',
                           completed: false,
                         },
                       ])
@@ -923,7 +948,7 @@ export function TabPendientesFlujo({
                   </button>
                 </div>
 
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                <div className="space-y-2">
                   {itemSubItems.map((sub, index) => (
                     <div
                       key={sub.id}
@@ -944,19 +969,29 @@ export function TabPendientesFlujo({
                         className="flex-1 px-2.5 py-2 rounded-lg bg-[#1C1C1E] text-xs text-white"
                       />
                       <input
-                        type="number"
-                        step="0.01"
-                        value={sub.amount}
+                        type="text"
+                        inputMode="decimal"
+                        value={
+                          sub.rawAmount !== undefined
+                            ? sub.rawAmount
+                            : sub.amount > 0
+                            ? String(sub.amount)
+                            : ''
+                        }
                         onChange={(e) => {
-                          const val = parseFloat(e.target.value) || 0;
+                          const raw = e.target.value;
+                          if (!/^[0-9]*[.,]?[0-9]*$/.test(raw)) return;
+                          const num = parseDecimal(raw);
                           setItemSubItems((prev) =>
                             prev.map((s, i) =>
-                              i === index ? { ...s, amount: val } : s
+                              i === index
+                                ? { ...s, rawAmount: raw, amount: num }
+                                : s
                             )
                           );
                         }}
-                        placeholder="0.00"
-                        className="w-24 px-2.5 py-2 rounded-lg bg-[#1C1C1E] text-xs font-bold text-white text-right"
+                        placeholder="0,00"
+                        className="w-28 px-2.5 py-2 rounded-lg bg-[#1C1C1E] text-xs font-bold text-white text-right focus:outline-none focus:border-[#6366F1] border border-transparent"
                       />
                       <button
                         type="button"
@@ -979,7 +1014,11 @@ export function TabPendientesFlujo({
                     {formatEUR(
                       itemSubItems
                         .filter((s) => !s.completed)
-                        .reduce((a, b) => a + Number(b.amount || 0), 0)
+                        .reduce(
+                          (a, b) =>
+                            a + parseDecimal(b.rawAmount ?? b.amount),
+                          0
+                        )
                     )}
                   </strong>
                 </div>
