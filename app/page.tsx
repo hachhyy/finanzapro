@@ -937,9 +937,9 @@ export default function FinanzaProApp() {
         style={{
           paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)',
         }}
-        className="fixed bottom-0 inset-x-0 z-50 pointer-events-auto bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-[#2C2C2E]"
+        className="fixed bottom-0 inset-x-0 z-40 pointer-events-auto bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-[#2C2C2E]"
       >
-        <div className="relative z-50 pointer-events-auto max-w-lg mx-auto grid grid-cols-3 px-2 pt-2 pb-1">
+        <div className="relative z-40 pointer-events-auto max-w-lg mx-auto grid grid-cols-3 px-2 pt-2 pb-1">
           <button
             type="button"
             onClick={() => setActiveTab('patrimonio')}

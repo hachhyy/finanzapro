@@ -32,15 +32,23 @@ export function BottomSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center pointer-events-auto">
-      {/* Backdrop */}
+    <div
+      style={{ zIndex: 9999 }}
+      className="fixed inset-0 z-[9999] flex items-end justify-center pointer-events-auto"
+    >
+      {/* Full-Screen Blurred Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm cursor-pointer"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer animate-[fadeIn_0.2s_ease-out]"
       />
 
-      {/* Sheet Panel */}
-      <div className="relative z-10 w-full max-w-lg max-h-[90dvh] flex flex-col rounded-t-3xl bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-x border-[#2C2C2E] shadow-2xl overflow-hidden pointer-events-auto">
+      {/* Sheet Panel floating cleanly above everything */}
+      <div
+        style={{
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 2rem)',
+        }}
+        className="relative z-10 w-full max-w-lg flex flex-col rounded-t-3xl bg-[#1C1C1E]/95 backdrop-blur-2xl border-t border-x border-[#2C2C2E] shadow-[0_-20px_50px_rgba(0,0,0,0.85)] overflow-hidden pointer-events-auto animate-[sheetSlideUp_0.28s_cubic-bezier(0.22,1,0.36,1)]"
+      >
         {/* iOS Grabber Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-10 h-1.5 rounded-full bg-zinc-600/80" />
@@ -66,8 +74,13 @@ export function BottomSheet({
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="px-5 py-5 overflow-y-auto space-y-4 pb-10">
+        {/* Scrollable Body with generous iOS SafeArea bottom padding */}
+        <div
+          style={{
+            paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 3.5rem), 3.75rem)',
+          }}
+          className="px-5 pt-5 overflow-y-auto overscroll-contain space-y-4 pb-14"
+        >
           {children}
         </div>
       </div>
