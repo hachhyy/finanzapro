@@ -852,7 +852,12 @@ export default function FinanzaProApp() {
   };
 
   return (
-    <div className="min-h-dvh bg-black text-white flex flex-col pb-28">
+    <div
+      style={{
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6.5rem)',
+      }}
+      className="min-h-dvh bg-black text-white flex flex-col pb-32"
+    >
       {/* CABECERA SUPERIOR FIJA Y MARCADOR DOBLE */}
       <HeaderScoreboard
         cloudConnected={cloudConnected}
@@ -868,7 +873,12 @@ export default function FinanzaProApp() {
       />
 
       {/* CONTENIDO DE LA PESTAÑA ACTIVA */}
-      <main className="relative z-10 pointer-events-auto flex-1 w-full max-w-lg mx-auto px-4 pt-4">
+      <main
+        style={{
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)',
+        }}
+        className="relative z-10 pointer-events-auto flex-1 w-full max-w-lg mx-auto px-4 pt-4 pb-32"
+      >
         {activeTab === 'patrimonio' && (
           <TabPatrimonio
             state={state}
@@ -914,8 +924,13 @@ export default function FinanzaProApp() {
       </main>
 
       {/* BARRA DE NAVEGACIÓN INFERIOR ESTILO iOS / TRADE REPUBLIC */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 pointer-events-auto bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-[#2C2C2E]">
-        <div className="relative z-50 pointer-events-auto max-w-lg mx-auto grid grid-cols-3 px-2 py-2">
+      <nav
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)',
+        }}
+        className="fixed bottom-0 inset-x-0 z-50 pointer-events-auto bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-[#2C2C2E]"
+      >
+        <div className="relative z-50 pointer-events-auto max-w-lg mx-auto grid grid-cols-3 px-2 pt-2 pb-1">
           <button
             type="button"
             onClick={() => setActiveTab('patrimonio')}

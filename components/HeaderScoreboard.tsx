@@ -49,7 +49,10 @@ export function HeaderScoreboard({
   const inversionesPct = 100 - liquidezPct;
 
   return (
-    <header className="sticky top-0 z-50 pointer-events-auto bg-black/95 backdrop-blur-xl border-b border-[#2C2C2E] pt-3 pb-3 px-4">
+    <header
+      style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 3rem)' }}
+      className="sticky top-0 z-50 pointer-events-auto bg-black/95 backdrop-blur-xl border-b border-[#2C2C2E] pt-12 pb-3 px-4"
+    >
       <div className="max-w-lg mx-auto space-y-3">
         {/* 1. Barra de Utilidades Superior */}
         <div className="flex items-center justify-between">
