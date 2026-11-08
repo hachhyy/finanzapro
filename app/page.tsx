@@ -111,24 +111,33 @@ export default function FinanzaProApp() {
     const local = loadLocalState();
     setState(local);
 
-    // Fetch live Yahoo Finance prices on startup in background
-    refreshLivePrices(local.assets);
-
-    // Check Supabase Cloud Sync in background
+    // Check Supabase Cloud Sync first so cloud data is never overwritten by a blank local state
     fetchStateFromCloud().then(({ connected, cloudState }) => {
       setCloudConnected(connected);
       if (cloudState) {
+        const localIsBlank =
+          local.accounts.every((a) => Number(a.balance || 0) === 0) &&
+          local.pendingItems.length === 0 &&
+          local.assets.every((a) => Number(a.shares || 0) === 0);
+
+        const cloudIsBlank =
+          cloudState.accounts.every((a) => Number(a.balance || 0) === 0) &&
+          cloudState.pendingItems.length === 0 &&
+          cloudState.assets.every((a) => Number(a.shares || 0) === 0);
+
         const localTime = new Date(local.updatedAt || 0).getTime();
         const cloudTime = new Date(cloudState.updatedAt || 0).getTime();
-        if (cloudTime > localTime) {
+
+        if (!cloudIsBlank && (localIsBlank || cloudTime >= localTime)) {
           setState(cloudState);
           saveLocalState(cloudState);
-        } else {
+          refreshLivePrices(cloudState.assets);
+          return;
+        } else if (!localIsBlank && cloudTime < localTime) {
           syncStateToCloud(local);
         }
-      } else if (connected) {
-        syncStateToCloud(local);
       }
+      refreshLivePrices(local.assets);
     });
   }, [refreshLivePrices]);
 

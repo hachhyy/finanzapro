@@ -87,10 +87,7 @@ const todayISO = () =>
     ? new Date().toISOString().split('T')[0]
     : '2026-01-01';
 
-const nowISO = () =>
-  typeof window !== 'undefined'
-    ? new Date().toISOString()
-    : '2026-01-01T00:00:00.000Z';
+const EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 
 export const DEFAULT_ACCOUNTS: BankAccount[] = [
   { id: 'acc_imagin', name: 'Imagin (Banco principal)', balance: 0 },
@@ -213,7 +210,7 @@ export function createBlankState(existingAssets?: InvestmentAsset[]): AppState {
     pendingItems: [],
     assets: baseAssets,
     history: [],
-    updatedAt: nowISO(),
+    updatedAt: EPOCH_ISO,
   };
 }
 
