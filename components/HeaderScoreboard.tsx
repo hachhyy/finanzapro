@@ -63,7 +63,7 @@ export function HeaderScoreboard({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold tracking-tight text-white">
-                  FinanzaPro
+                  POCKET
                 </h1>
                 <span
                   title={

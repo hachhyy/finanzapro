@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'FinanzaPro — Patrimonio & Inversiones',
-    short_name: 'FinanzaPro',
+    name: 'POCKET — Patrimonio & Inversiones',
+    short_name: 'POCKET',
     description:
       'Gestión patrimonial estilo iOS & Trade Republic con DCA, liquidez e inversiones en tiempo real.',
     start_url: '/',

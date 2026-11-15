@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'FinanzaPro',
+  title: 'POCKET',
   description:
     'Control Patrimonial, Flujo Mensual e Inversiones estilo Trade Republic para iOS',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'FinanzaPro',
+    title: 'POCKET',
   },
   other: {
     'apple-mobile-web-app-capable': 'yes',
