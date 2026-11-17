@@ -25,7 +25,9 @@ export interface PendingItem {
 export interface InvestmentAsset {
   id: string;
   name: string;
+  isin?: string;
   ticker: string;
+  resolvedTicker?: string;
   dcaMonthly: number;
   shares: number;
   costBasis: number;
@@ -103,105 +105,305 @@ export const DEFAULT_ACCOUNTS: BankAccount[] = [
 
 export const DEFAULT_ASSETS: InvestmentAsset[] = [
   {
-    id: 'ast_btc',
-    name: 'Bitcoin',
-    ticker: 'BTC-EUR',
-    dcaMonthly: 30,
+    id: 'ast_sp500',
+    name: 'Core S&P 500 USD (Acc)',
+    isin: 'IE00B5BMR087',
+    ticker: 'SXR8.DE',
+    resolvedTicker: 'SXR8.DE',
+    dcaMonthly: 75,
     shares: 0,
     costBasis: 0,
-    priceEur: 82500,
-    change24h: 1.85,
-    currency: 'EUR',
-  },
-  {
-    id: 'ast_spyl',
-    name: 'S&P 500 USD Acc',
-    ticker: 'SPYL.DE',
-    dcaMonthly: 85,
-    shares: 0,
-    costBasis: 0,
-    priceEur: 13.45,
+    priceEur: 733.22,
     change24h: 0.62,
     currency: 'EUR',
   },
   {
-    id: 'ast_ppfb',
-    name: 'Physical Gold USD Acc',
-    ticker: 'PPFB.DE',
-    dcaMonthly: 20,
-    shares: 0,
-    costBasis: 0,
-    priceEur: 49.8,
-    change24h: 0.41,
-    currency: 'EUR',
-  },
-  {
-    id: 'ast_isln',
-    name: 'Physical Silver',
-    ticker: 'ISLN.L',
-    dcaMonthly: 20,
-    shares: 0,
-    costBasis: 0,
-    priceEur: 28.9,
-    change24h: -0.35,
-    currency: 'USD',
-  },
-  {
-    id: 'ast_is3n',
-    name: 'Core MSCI EM IMI USD Acc',
-    ticker: 'IS3N.DE',
-    dcaMonthly: 20,
-    shares: 0,
-    costBasis: 0,
-    priceEur: 33.15,
-    change24h: 0.28,
-    currency: 'EUR',
-  },
-  {
     id: 'ast_qdvg',
-    name: 'S&P 500 Health Care USD Acc',
+    name: 'S&P 500 Health Care Sector',
+    isin: 'IE00B43HR379',
     ticker: 'QDVG.DE',
+    resolvedTicker: 'QDVG.DE',
     dcaMonthly: 10,
     shares: 0,
     costBasis: 0,
-    priceEur: 11.2,
-    change24h: 0.15,
+    priceEur: 13.92,
+    change24h: 0.88,
     currency: 'EUR',
   },
   {
     id: 'ast_l0ck',
-    name: 'Digital Security USD Acc',
+    name: 'Digital Security USD (Acc)',
+    isin: 'IE00BG0J4C88',
     ticker: 'L0CK.DE',
+    resolvedTicker: 'L0CK.DE',
     dcaMonthly: 10,
     shares: 0,
     costBasis: 0,
-    priceEur: 8.45,
-    change24h: 1.12,
+    priceEur: 11.25,
+    change24h: -0.37,
+    currency: 'EUR',
+  },
+  {
+    id: 'ast_isln',
+    name: 'Physical Silver ETC',
+    isin: 'IE00B4NCWG09',
+    ticker: '4RT8.DE',
+    resolvedTicker: '4RT8.DE',
+    dcaMonthly: 10,
+    shares: 0,
+    costBasis: 0,
+    priceEur: 41.3,
+    change24h: -0.35,
+    currency: 'EUR',
+  },
+  {
+    id: 'ast_is3n',
+    name: 'Core MSCI EM IMI USD (Acc)',
+    isin: 'IE00BKM4GZ66',
+    ticker: 'IS3N.DE',
+    resolvedTicker: 'IS3N.DE',
+    dcaMonthly: 85,
+    shares: 0,
+    costBasis: 0,
+    priceEur: 44.32,
+    change24h: 0.28,
     currency: 'EUR',
   },
   {
     id: 'ast_vvsm',
-    name: 'Semiconductor USD Acc',
+    name: 'Semiconductor USD (Acc)',
+    isin: 'IE00BMC38736',
     ticker: 'VVSM.DE',
-    dcaMonthly: 5,
+    resolvedTicker: 'VVSM.DE',
+    dcaMonthly: 10,
     shares: 0,
     costBasis: 0,
-    priceEur: 42.6,
+    priceEur: 79.89,
     change24h: 1.94,
     currency: 'EUR',
   },
 ];
 
-export function createBlankState(existingAssets?: InvestmentAsset[]): AppState {
-  const baseAssets = (existingAssets && existingAssets.length > 0 ? existingAssets : DEFAULT_ASSETS).map(
-    (a) => ({
-      ...a,
-      shares: 0,
-      costBasis: 0,
-    })
-  );
+const LEGACY_MIGRATION_MAP: Record<
+  string,
+  {
+    isin: string;
+    resolvedTicker: string;
+    name: string;
+    defaultPriceEur: number;
+    legacyNames: string[];
+  }
+> = {
+  'SPYL.DE': {
+    isin: 'IE00B5BMR087',
+    resolvedTicker: 'SXR8.DE',
+    name: 'Core S&P 500 USD (Acc)',
+    defaultPriceEur: 733.22,
+    legacyNames: ['S&P 500 USD Acc', 'S&P 500', 'SPYL.DE'],
+  },
+  'VUAA.DE': {
+    isin: 'IE00B5BMR087',
+    resolvedTicker: 'SXR8.DE',
+    name: 'Core S&P 500 USD (Acc)',
+    defaultPriceEur: 733.22,
+    legacyNames: ['S&P 500 USD Acc', 'S&P 500', 'VUAA.DE'],
+  },
+  'SXR8.DE': {
+    isin: 'IE00B5BMR087',
+    resolvedTicker: 'SXR8.DE',
+    name: 'Core S&P 500 USD (Acc)',
+    defaultPriceEur: 733.22,
+    legacyNames: ['S&P 500 USD Acc', 'S&P 500', 'SXR8.DE'],
+  },
+  IE00B5BMR087: {
+    isin: 'IE00B5BMR087',
+    resolvedTicker: 'SXR8.DE',
+    name: 'Core S&P 500 USD (Acc)',
+    defaultPriceEur: 733.22,
+    legacyNames: ['S&P 500 USD Acc', 'S&P 500', 'SPYL.DE'],
+  },
+  'QDVG.DE': {
+    isin: 'IE00B43HR379',
+    resolvedTicker: 'QDVG.DE',
+    name: 'S&P 500 Health Care Sector',
+    defaultPriceEur: 13.92,
+    legacyNames: ['S&P 500 Health Care USD Acc', 'QDVG.DE'],
+  },
+  IE00B43HR379: {
+    isin: 'IE00B43HR379',
+    resolvedTicker: 'QDVG.DE',
+    name: 'S&P 500 Health Care Sector',
+    defaultPriceEur: 13.92,
+    legacyNames: ['S&P 500 Health Care USD Acc', 'QDVG.DE'],
+  },
+  'L0CK.DE': {
+    isin: 'IE00BG0J4C88',
+    resolvedTicker: 'L0CK.DE',
+    name: 'Digital Security USD (Acc)',
+    defaultPriceEur: 11.25,
+    legacyNames: ['Digital Security USD Acc', 'L0CK.DE'],
+  },
+  IE00BG0J4C88: {
+    isin: 'IE00BG0J4C88',
+    resolvedTicker: 'L0CK.DE',
+    name: 'Digital Security USD (Acc)',
+    defaultPriceEur: 11.25,
+    legacyNames: ['Digital Security USD Acc', 'L0CK.DE'],
+  },
+  'ISLN.L': {
+    isin: 'IE00B4NCWG09',
+    resolvedTicker: '4RT8.DE',
+    name: 'Physical Silver ETC',
+    defaultPriceEur: 41.3,
+    legacyNames: ['Physical Silver', 'ISLN.L', '4RT8.DE'],
+  },
+  '4RT8.DE': {
+    isin: 'IE00B4NCWG09',
+    resolvedTicker: '4RT8.DE',
+    name: 'Physical Silver ETC',
+    defaultPriceEur: 41.3,
+    legacyNames: ['Physical Silver', 'ISLN.L', '4RT8.DE'],
+  },
+  IE00B4NCWG09: {
+    isin: 'IE00B4NCWG09',
+    resolvedTicker: '4RT8.DE',
+    name: 'Physical Silver ETC',
+    defaultPriceEur: 41.3,
+    legacyNames: ['Physical Silver', 'ISLN.L', '4RT8.DE'],
+  },
+  'IS3N.DE': {
+    isin: 'IE00BKM4GZ66',
+    resolvedTicker: 'IS3N.DE',
+    name: 'Core MSCI EM IMI USD (Acc)',
+    defaultPriceEur: 44.32,
+    legacyNames: ['Core MSCI EM IMI USD Acc', 'IS3N.DE'],
+  },
+  IE00BKM4GZ66: {
+    isin: 'IE00BKM4GZ66',
+    resolvedTicker: 'IS3N.DE',
+    name: 'Core MSCI EM IMI USD (Acc)',
+    defaultPriceEur: 44.32,
+    legacyNames: ['Core MSCI EM IMI USD Acc', 'IS3N.DE'],
+  },
+  'VVSM.DE': {
+    isin: 'IE00BMC38736',
+    resolvedTicker: 'VVSM.DE',
+    name: 'Semiconductor USD (Acc)',
+    defaultPriceEur: 79.89,
+    legacyNames: ['Semiconductor USD Acc', 'VVSM.DE'],
+  },
+  IE00BMC38736: {
+    isin: 'IE00BMC38736',
+    resolvedTicker: 'VVSM.DE',
+    name: 'Semiconductor USD (Acc)',
+    defaultPriceEur: 79.89,
+    legacyNames: ['Semiconductor USD Acc', 'VVSM.DE'],
+  },
+  'PPFB.DE': {
+    isin: 'IE00B4ND3602',
+    resolvedTicker: 'PPFB.DE',
+    name: 'Physical Gold USD Acc',
+    defaultPriceEur: 70.64,
+    legacyNames: ['Physical Gold USD Acc', 'PPFB.DE'],
+  },
+  IE00B4ND3602: {
+    isin: 'IE00B4ND3602',
+    resolvedTicker: 'PPFB.DE',
+    name: 'Physical Gold USD Acc',
+    defaultPriceEur: 70.64,
+    legacyNames: ['Physical Gold USD Acc', 'PPFB.DE'],
+  },
+};
+
+/**
+ * Fase 2: Migración automática de activos a códigos ISIN y reemplazo de SPYL.DE / VUAA.DE -> IE00B5BMR087 (SXR8.DE),
+ * preservando participaciones (shares), capital invertido (costBasis) y DCA mensual del usuario.
+ */
+export function migrateAssetsState(state: AppState): {
+  state: AppState;
+  migrated: boolean;
+} {
+  if (!state || !Array.isArray(state.assets)) {
+    return { state, migrated: false };
+  }
+
+  let migrated = false;
+
+  const updatedAssets: InvestmentAsset[] = state.assets.map((asset) => {
+    const rawKey = (asset.isin || asset.ticker || '').trim().toUpperCase();
+    const tickerKey = (asset.ticker || '').trim().toUpperCase();
+    const rule = LEGACY_MIGRATION_MAP[rawKey] || LEGACY_MIGRATION_MAP[tickerKey];
+
+    if (rule) {
+      const isSp500StalePrice =
+        rule.isin === 'IE00B5BMR087' && Number(asset.priceEur || 0) < 100;
+      const shouldUpdateName =
+        !asset.name || rule.legacyNames.includes(asset.name.trim());
+      const nextName = shouldUpdateName ? rule.name : asset.name;
+      const nextPrice = isSp500StalePrice
+        ? rule.defaultPriceEur
+        : Number(asset.priceEur || rule.defaultPriceEur);
+
+      if (
+        asset.isin !== rule.isin ||
+        asset.resolvedTicker !== rule.resolvedTicker ||
+        asset.ticker !== rule.resolvedTicker ||
+        asset.name !== nextName ||
+        asset.priceEur !== nextPrice ||
+        asset.currency !== 'EUR'
+      ) {
+        migrated = true;
+      }
+
+      return {
+        ...asset,
+        name: nextName,
+        isin: rule.isin,
+        ticker: rule.resolvedTicker,
+        resolvedTicker: rule.resolvedTicker,
+        priceEur: nextPrice,
+        currency: 'EUR',
+      };
+    }
+
+    // Cualquier otro activo (ej. BTC-EUR o ISIN personalizado) conserva sus campos garantizando isin y resolvedTicker
+    const nextIsin = asset.isin || asset.ticker;
+    const nextResolved = asset.resolvedTicker || asset.ticker;
+    if (asset.isin !== nextIsin || asset.resolvedTicker !== nextResolved) {
+      migrated = true;
+      return {
+        ...asset,
+        isin: nextIsin,
+        resolvedTicker: nextResolved,
+      };
+    }
+
+    return asset;
+  });
+
+  if (!migrated) {
+    return { state, migrated: false };
+  }
 
   return {
+    state: {
+      ...state,
+      assets: updatedAssets,
+    },
+    migrated: true,
+  };
+}
+
+export function createBlankState(existingAssets?: InvestmentAsset[]): AppState {
+  const sourceAssets =
+    existingAssets && existingAssets.length > 0 ? existingAssets : DEFAULT_ASSETS;
+  const baseAssets = sourceAssets.map((a) => ({
+    ...a,
+    shares: 0,
+    costBasis: 0,
+  }));
+
+  const rawState: AppState = {
     accounts: DEFAULT_ACCOUNTS.map((acc) => ({ ...acc, balance: 0 })),
     trInterestRate: 2.5,
     trAccruedInterest: 0,
@@ -212,29 +414,43 @@ export function createBlankState(existingAssets?: InvestmentAsset[]): AppState {
     history: [],
     updatedAt: EPOCH_ISO,
   };
+
+  return migrateAssetsState(rawState).state;
 }
 
 export function createDemoState(currentAssets?: InvestmentAsset[]): AppState {
-  const btcPrice =
-    currentAssets?.find((a) => a.ticker === 'BTC-EUR')?.priceEur || 82500;
-  const btcShares = Number((368.85 / btcPrice).toFixed(8));
+  const baseList =
+    currentAssets && currentAssets.length > 0 ? currentAssets : DEFAULT_ASSETS;
+  const migratedList = migrateAssetsState({
+    accounts: [],
+    trInterestRate: 2.5,
+    trAccruedInterest: 0,
+    lastInterestCalcDate: todayISO(),
+    monthlySavingsTarget: 900,
+    pendingItems: [],
+    assets: baseList,
+    history: [],
+    updatedAt: EPOCH_ISO,
+  }).state.assets;
 
-  const assets = (currentAssets && currentAssets.length > 0 ? currentAssets : DEFAULT_ASSETS).map(
-    (a) => {
-      if (a.ticker === 'BTC-EUR') {
-        return {
-          ...a,
-          shares: btcShares,
-          costBasis: 350.0,
-        };
-      }
+  const sp500Price =
+    migratedList.find((a) => a.isin === 'IE00B5BMR087')?.priceEur || 733.22;
+  const sp500Shares = Number((368.85 / sp500Price).toFixed(8));
+
+  const assets = migratedList.map((a) => {
+    if (a.isin === 'IE00B5BMR087' || a.ticker === 'SXR8.DE') {
       return {
         ...a,
-        shares: 0,
-        costBasis: 0,
+        shares: sp500Shares,
+        costBasis: 350.0,
       };
     }
-  );
+    return {
+      ...a,
+      shares: 0,
+      costBasis: 0,
+    };
+  });
 
   const pendingItems: PendingItem[] = [
     {

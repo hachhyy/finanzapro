@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { AppState, createBlankState } from './types';
+import { AppState, createBlankState, migrateAssetsState } from './types';
 
 const LOCAL_STORAGE_KEY = 'finanzapro_state_v1';
 const SUPABASE_CONFIG_KEY = 'finanzapro_supabase_config_v1';
@@ -73,7 +73,12 @@ export function loadLocalState(): AppState {
       return blank;
     }
     const parsed = JSON.parse(raw) as AppState;
-    return applyDailyAutoAccrual(parsed);
+    const accrued = applyDailyAutoAccrual(parsed);
+    const { state: migratedState, migrated } = migrateAssetsState(accrued);
+    if (migrated) {
+      saveLocalState(migratedState);
+    }
+    return migratedState;
   } catch {
     return createBlankState();
   }
@@ -165,9 +170,15 @@ export async function fetchStateFromCloud(): Promise<{
     if (data && data.state_data && Object.keys(data.state_data).length > 0) {
       const remoteState = data.state_data as AppState;
       if (Array.isArray(remoteState.accounts)) {
+        const accrued = applyDailyAutoAccrual(remoteState);
+        const { state: migratedCloudState, migrated } =
+          migrateAssetsState(accrued);
+        if (migrated) {
+          syncStateToCloud(migratedCloudState);
+        }
         return {
           connected: true,
-          cloudState: applyDailyAutoAccrual(remoteState),
+          cloudState: migratedCloudState,
         };
       }
     }

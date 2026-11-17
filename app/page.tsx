@@ -68,26 +68,40 @@ export default function FinanzaProApp() {
     });
   }, []);
 
-  // Fetch live prices in EUR from /api/prices
+  // Fetch live prices in EUR from /api/prices (supports ISIN and Ticker resolution)
   const refreshLivePrices = useCallback(async (currentAssets?: AppState['assets']) => {
     setIsRefreshingPrices(true);
     try {
       const list = currentAssets || [];
-      const tickers = list.map((a) => a.ticker).join(',');
+      const codes = list
+        .map((a) => a.isin || a.resolvedTicker || a.ticker)
+        .filter(Boolean)
+        .join(',');
       const res = await fetch(
-        `/api/prices${tickers ? `?tickers=${encodeURIComponent(tickers)}` : ''}`
+        `/api/prices${codes ? `?tickers=${encodeURIComponent(codes)}` : ''}`
       );
       const data = await res.json();
       if (data?.prices) {
         setState((prev) => {
           const updatedAssets = prev.assets.map((asset) => {
-            const quote = data.prices[asset.ticker];
+            const isinKey = (asset.isin || '').toUpperCase();
+            const resolvedKey = (asset.resolvedTicker || '').toUpperCase();
+            const tickerKey = (asset.ticker || '').toUpperCase();
+            const quote =
+              (isinKey && data.prices[isinKey]) ||
+              (resolvedKey && data.prices[resolvedKey]) ||
+              (tickerKey && data.prices[tickerKey]);
             if (!quote || !quote.priceEur) return asset;
+            const nextResolved =
+              quote.resolvedTicker || asset.resolvedTicker || asset.ticker;
             return {
               ...asset,
+              isin: quote.isin || asset.isin || asset.ticker,
+              ticker: nextResolved,
+              resolvedTicker: nextResolved,
               priceEur: Number(quote.priceEur),
               change24h: Number(quote.change24h ?? asset.change24h ?? 0),
-              currency: quote.currency || asset.currency,
+              currency: quote.currency || asset.currency || 'EUR',
             };
           });
           const next: AppState = {
@@ -677,51 +691,89 @@ export default function FinanzaProApp() {
   // ====================================================================
   // TAB 3 HANDLERS: INVERSIONES (PARTICIPACIONES, COMPRA & VENTA)
   // ====================================================================
-  const handleAddAsset = (name: string, ticker: string, dcaMonthly: number) => {
+  const handleAddAsset = (params: {
+    isin: string;
+    name: string;
+    resolvedTicker: string;
+    priceEur: number;
+    change24h?: number;
+    dcaMonthly: number;
+    shares?: number;
+    costBasis?: number;
+  }) => {
     const newId = `ast_${Date.now()}`;
-    commitState((prev) => ({
-      ...prev,
-      assets: [
-        ...prev.assets,
-        {
-          id: newId,
-          name,
-          ticker,
-          dcaMonthly,
-          shares: 0,
-          costBasis: 0,
-          priceEur: 25,
-          change24h: 0,
-          currency: 'EUR',
-        },
-      ],
-    }));
-    setTimeout(() => refreshLivePrices(), 150);
+    const cleanCode = params.isin.trim().toUpperCase();
+    const cleanTicker = params.resolvedTicker.trim().toUpperCase();
+    const newAsset = {
+      id: newId,
+      name: params.name.trim() || cleanCode,
+      isin: cleanCode,
+      ticker: cleanTicker,
+      resolvedTicker: cleanTicker,
+      dcaMonthly: Number((params.dcaMonthly || 0).toFixed(2)),
+      shares: Number((params.shares || 0).toFixed(8)),
+      costBasis: Number((params.costBasis || 0).toFixed(2)),
+      priceEur: Number(params.priceEur > 0 ? params.priceEur : 50),
+      change24h: Number(params.change24h || 0),
+      currency: 'EUR',
+    };
+
+    commitState((prev) => {
+      const nextAssets = [...prev.assets, newAsset];
+      setTimeout(() => refreshLivePrices(nextAssets), 150);
+      return {
+        ...prev,
+        assets: nextAssets,
+      };
+    });
   };
 
   const handleUpdateAssetPosition = ({
     assetId,
     name,
+    isin,
     ticker,
+    resolvedTicker,
+    priceEur,
     shares,
     costBasis,
     dcaMonthly,
   }: {
     assetId: string;
     name: string;
+    isin?: string;
     ticker: string;
+    resolvedTicker?: string;
+    priceEur?: number;
     shares: number;
     costBasis: number;
     dcaMonthly: number;
   }) => {
-    commitState((prev) => ({
-      ...prev,
-      assets: prev.assets.map((a) =>
-        a.id === assetId
-          ? { ...a, name, ticker, shares, costBasis, dcaMonthly }
-          : a
-      ),
-    }));
+    commitState((prev) => {
+      const nextAssets = prev.assets.map((a) => {
+        if (a.id !== assetId) return a;
+        const nextTicker = (resolvedTicker || ticker || a.ticker)
+          .trim()
+          .toUpperCase();
+        const nextIsin = (isin || a.isin || nextTicker).trim().toUpperCase();
+        return {
+          ...a,
+          name,
+          isin: nextIsin,
+          ticker: nextTicker,
+          resolvedTicker: nextTicker,
+          priceEur:
+            priceEur !== undefined && priceEur > 0 ? priceEur : a.priceEur,
+          shares,
+          costBasis,
+          dcaMonthly,
+        };
+      });
+      return {
+        ...prev,
+        assets: nextAssets,
+      };
+    });
   };
 
   const handleDeleteAsset = (assetId: string) => {

@@ -126,9 +126,15 @@ function buildFallbackSeries(
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const ticker = (searchParams.get('ticker') || 'BTC-EUR').trim();
+  const rawInput = (searchParams.get('ticker') || 'BTC-EUR').trim();
   const range = ((searchParams.get('range') || '1M').toUpperCase() as ChartRange);
   const basePriceParam = Number(searchParams.get('basePrice') || 100);
+
+  const { resolveIsinToTicker } = await import('@/lib/isinResolver');
+  const resolved = await resolveIsinToTicker(rawInput);
+  const candidates = [resolved.resolvedTicker, resolved.fallbackTicker].filter(
+    Boolean
+  ) as string[];
 
   let eurUsd = 1.08;
   let eurGbp = 0.85;
@@ -146,53 +152,57 @@ export async function GET(req: NextRequest) {
 
   const { period1, interval } = getPeriodConfig(range);
 
-  try {
-    const chartRes: any = await yf.chart(ticker, {
-      period1,
-      interval,
-    });
-
-    const currency = String(chartRes?.meta?.currency || 'EUR');
-    const quotes: any[] = Array.isArray(chartRes?.quotes) ? chartRes.quotes : [];
-
-    const validPoints = quotes
-      .filter((q) => q && typeof q.close === 'number' && q.close > 0 && q.date)
-      .map((q) => {
-        const d = new Date(q.date);
-        const priceEur = convertToEur(Number(q.close), currency, eurUsd, eurGbp);
-        const label =
-          range === '1D'
-            ? d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-            : d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-        return {
-          timestamp: d.toISOString(),
-          label,
-          priceEur: Number(priceEur.toFixed(4)),
-        };
+  for (const ticker of candidates) {
+    try {
+      const chartRes: any = await yf.chart(ticker, {
+        period1,
+        interval,
       });
 
-    if (validPoints.length >= 2) {
-      return NextResponse.json({
-        ticker,
-        range,
-        currency: 'EUR',
-        originalCurrency: currency,
-        source: 'live',
-        series: validPoints,
-      });
+      const currency = String(chartRes?.meta?.currency || 'EUR');
+      const quotes: any[] = Array.isArray(chartRes?.quotes) ? chartRes.quotes : [];
+
+      const validPoints = quotes
+        .filter((q) => q && typeof q.close === 'number' && q.close > 0 && q.date)
+        .map((q) => {
+          const d = new Date(q.date);
+          const priceEur = convertToEur(Number(q.close), currency, eurUsd, eurGbp);
+          const label =
+            range === '1D'
+              ? d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+              : d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+          return {
+            timestamp: d.toISOString(),
+            label,
+            priceEur: Number(priceEur.toFixed(4)),
+          };
+        });
+
+      if (validPoints.length >= 2) {
+        return NextResponse.json({
+          ticker,
+          isin: resolved.isin,
+          range,
+          currency: 'EUR',
+          originalCurrency: currency,
+          source: 'live',
+          series: validPoints,
+        });
+      }
+    } catch {
+      // try next candidate
     }
-  } catch {
-    // Fallback below if Yahoo Finance rate-limits or network blocks
   }
 
   const fallbackSeries = buildFallbackSeries(
-    ticker,
-    basePriceParam > 0 ? basePriceParam : 100,
+    resolved.resolvedTicker,
+    basePriceParam > 0 ? basePriceParam : resolved.defaultPriceEur || 100,
     range
   );
 
   return NextResponse.json({
-    ticker,
+    ticker: resolved.resolvedTicker,
+    isin: resolved.isin,
     range,
     currency: 'EUR',
     source: 'fallback',
