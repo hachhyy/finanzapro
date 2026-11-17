@@ -29,11 +29,33 @@ export interface InvestmentAsset {
   ticker: string;
   resolvedTicker?: string;
   dcaMonthly: number;
+  dcaEnabled?: boolean;
   shares: number;
   costBasis: number;
   priceEur: number;
   change24h: number;
   currency?: string;
+}
+
+export interface MonthlyFlowConfig {
+  savingsFromAccountId?: string;
+  savingsToAccountId?: string;
+  executionMode: 'manual' | 'auto';
+  scheduledDay: number;
+  dcaAccountId?: string;
+  lastSavingsMonth?: string;
+  lastDcaMonth?: string;
+  lastAutoError?: string;
+}
+
+export interface PostDcaSummaryItem {
+  assetId: string;
+  name: string;
+  ticker: string;
+  dcaAmountEur: number;
+  priceEur: number;
+  addedShares: number;
+  newTotalShares: number;
 }
 
 export interface HistoryRecord {
@@ -77,6 +99,7 @@ export interface AppState {
   trAccruedInterest: number;
   lastInterestCalcDate: string;
   monthlySavingsTarget: number;
+  monthlyFlow?: MonthlyFlowConfig;
   pendingItems: PendingItem[];
   assets: InvestmentAsset[];
   history: HistoryRecord[];
@@ -408,7 +431,11 @@ export function createBlankState(existingAssets?: InvestmentAsset[]): AppState {
     trInterestRate: 2.5,
     trAccruedInterest: 0,
     lastInterestCalcDate: todayISO(),
-    monthlySavingsTarget: 900,
+    monthlySavingsTarget: 1000,
+    monthlyFlow: {
+      executionMode: 'manual',
+      scheduledDay: 2,
+    },
     pendingItems: [],
     assets: baseAssets,
     history: [],
@@ -426,7 +453,7 @@ export function createDemoState(currentAssets?: InvestmentAsset[]): AppState {
     trInterestRate: 2.5,
     trAccruedInterest: 0,
     lastInterestCalcDate: todayISO(),
-    monthlySavingsTarget: 900,
+    monthlySavingsTarget: 1000,
     pendingItems: [],
     assets: baseList,
     history: [],
@@ -553,7 +580,11 @@ export function createDemoState(currentAssets?: InvestmentAsset[]): AppState {
     trInterestRate: 2.5,
     trAccruedInterest: 0.09,
     lastInterestCalcDate: todayISO(),
-    monthlySavingsTarget: 900.0,
+    monthlySavingsTarget: 1000.0,
+    monthlyFlow: {
+      executionMode: 'manual',
+      scheduledDay: 2,
+    },
     pendingItems,
     assets,
     history: [],

@@ -2,8 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  ArrowRight,
-  Sparkles,
   Plus,
   Folder,
   ChevronDown,
@@ -11,8 +9,6 @@ import {
   Trash2,
   RotateCcw,
   History,
-  CheckCircle2,
-  AlertCircle,
   Edit3,
 } from 'lucide-react';
 import {
@@ -24,29 +20,9 @@ import {
 } from '@/lib/types';
 import { BottomSheet } from './BottomSheet';
 
-export interface PostDcaSummaryItem {
-  assetId: string;
-  name: string;
-  ticker: string;
-  dcaAmountEur: number;
-  priceEur: number;
-  addedShares: number;
-  newTotalShares: number;
-}
-
 interface TabPendientesFlujoProps {
   state: AppState;
   privacyMode: boolean;
-  onUpdateMonthlySavingsTarget: (amount: number) => void;
-  onExecuteSavingsTransfer: () => void;
-  onExecuteDcaPlan: () => {
-    ok: boolean;
-    error?: string;
-    summary?: PostDcaSummaryItem[];
-  };
-  onSavePostDcaAdjustments: (
-    adjustments: { assetId: string; finalShares: number }[]
-  ) => void;
   onUpsertPendingItem: (item: PendingItem) => void;
   onDeletePendingItem: (id: string) => void;
   onSettlePending: (params: {
@@ -61,34 +37,17 @@ interface TabPendientesFlujoProps {
 export function TabPendientesFlujo({
   state,
   privacyMode,
-  onUpdateMonthlySavingsTarget,
-  onExecuteSavingsTransfer,
-  onExecuteDcaPlan,
-  onSavePostDcaAdjustments,
   onUpsertPendingItem,
   onDeletePendingItem,
   onSettlePending,
   onRevertHistoryRecord,
 }: TabPendientesFlujoProps) {
-  // 1. Flujo Mensual Manual states
-  const [isEditingSavingsTarget, setIsEditingSavingsTarget] = useState(false);
-  const [savingsInput, setSavingsInput] = useState('');
-
-  // Post-DCA adjustment Bottom Sheet
-  const [postDcaItems, setPostDcaItems] = useState<PostDcaSummaryItem[] | null>(
-    null
-  );
-  const [postDcaShareInputs, setPostDcaShareInputs] = useState<
-    Record<string, string>
-  >({});
-  const [dcaErrorMsg, setDcaErrorMsg] = useState<string | null>(null);
-
-  // 2. Folder collapse states
+  // Folder collapse states
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     'Pegajosa Halloween': true,
   });
 
-  // 3. Create / Edit Pending Item Sheet
+  // Create / Edit Pending Item Sheet
   const [editingItem, setEditingItem] = useState<PendingItem | null>(null);
   const [itemName, setItemName] = useState('');
   const [itemFolder, setItemFolder] = useState('');
@@ -99,7 +58,7 @@ export function TabPendientesFlujo({
   >([]);
   const [confirmDeleteItem, setConfirmDeleteItem] = useState(false);
 
-  // 4. Cobrar / Pagar (Liquidación Total o Parcial) Sheet
+  // Cobrar / Pagar (Liquidación Total o Parcial) Sheet
   const [settlingTarget, setSettlingTarget] = useState<{
     item: PendingItem;
     subItem?: SubItem;
@@ -108,14 +67,8 @@ export function TabPendientesFlujo({
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [settleAmountInput, setSettleAmountInput] = useState('');
 
-  // 5. Collapsible History Panel
+  // Collapsible History Panel
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-
-  const totalMonthlyDca = useMemo(
-    () =>
-      state.assets.reduce((sum, a) => sum + Number(a.dcaMonthly || 0), 0),
-    [state.assets]
-  );
 
   const incomes = useMemo(
     () => state.pendingItems.filter((i) => i.type === 'income'),
@@ -252,25 +205,6 @@ export function TabPendientesFlujo({
     setSettlingTarget(null);
   };
 
-  const handleTriggerDca = () => {
-    const res = onExecuteDcaPlan();
-    if (!res.ok) {
-      setDcaErrorMsg(
-        res.error ||
-          'Saldo insuficiente en Trade Republic (Efectivo remunerado).'
-      );
-      return;
-    }
-    if (res.summary) {
-      const inputs: Record<string, string> = {};
-      res.summary.forEach((s) => {
-        inputs[s.assetId] = s.newTotalShares.toFixed(8);
-      });
-      setPostDcaShareInputs(inputs);
-      setPostDcaItems(res.summary);
-    }
-  };
-
   const renderPendingRow = (item: PendingItem) => {
     const isIncome = item.type === 'income';
     const effectiveAmt = getPendingEffectiveAmount(item);
@@ -376,84 +310,7 @@ export function TabPendientesFlujo({
 
   return (
     <div className="space-y-6">
-      {/* 1. Tarjeta de Flujo Mensual Manual (Sueldo ➔ Ahorro ➔ DCA) */}
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-4 space-y-3.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#6366F1]" />
-            <h2 className="text-sm font-bold text-white">
-              Flujo Mensual Manual (Sueldo ➔ Ahorro ➔ DCA)
-            </h2>
-          </div>
-        </div>
-
-        {/* Acción 1: Traspasar Ahorro Mensual (Imagin ➔ Trade Republic) */}
-        <div className="p-3 rounded-xl bg-black/50 border border-[#2C2C2E] space-y-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <div className="text-xs font-semibold text-zinc-200">
-                1. Traspasar Ahorro Mensual (Imagin ➔ Trade Republic)
-              </div>
-              <div className="text-[11px] text-zinc-500">
-                Toca el importe para editar tu objetivo de ahorro mensual
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSavingsInput(String(state.monthlySavingsTarget));
-                setIsEditingSavingsTarget(true);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-zinc-800 border border-[#2C2C2E] text-xs font-bold text-[#10B981] hover:border-[#10B981]/50"
-            >
-              {formatEUR(state.monthlySavingsTarget, privacyMode)}
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={onExecuteSavingsTransfer}
-            className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-98 transition"
-          >
-            <span>
-              Traspasar Ahorro Mensual (
-              {formatEUR(state.monthlySavingsTarget, privacyMode)})
-            </span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#10B981]" />
-          </button>
-        </div>
-
-        {/* Acción 2: Ejecutar Plan DCA Mensual */}
-        <div className="p-3 rounded-xl bg-[#6366F1]/10 border border-[#6366F1]/30 space-y-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <div className="text-xs font-semibold text-white">
-                2. Ejecutar Plan DCA Mensual
-              </div>
-              <div className="text-[11px] text-zinc-400">
-                Suma automática en tiempo real de tus activos con DCA
-              </div>
-            </div>
-            <span className="px-2.5 py-1 rounded-lg bg-[#6366F1]/20 text-xs font-bold text-[#6366F1]">
-              {formatEUR(totalMonthlyDca, privacyMode)}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleTriggerDca}
-            className="w-full py-2.5 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-lg shadow-[#6366F1]/20"
-          >
-            <span>
-              Ejecutar Plan DCA Mensual (
-              {formatEUR(totalMonthlyDca, privacyMode)})
-            </span>
-            <Sparkles className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. INGRESOS POR COBRAR + CARPETAS DE EVENTOS */}
+      {/* 1. INGRESOS POR COBRAR + CARPETAS DE EVENTOS */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -672,150 +529,6 @@ export function TabPendientesFlujo({
           </div>
         )}
       </div>
-
-      {/* Bottom Sheet: Editar Objetivo de Ahorro Mensual */}
-      <BottomSheet
-        isOpen={isEditingSavingsTarget}
-        onClose={() => setIsEditingSavingsTarget(false)}
-        title="Importe de Ahorro Mensual"
-        subtitle="Configura el importe del traspaso rápido Imagin ➔ Trade Republic"
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const val = parseFloat(savingsInput.replace(',', '.'));
-            if (Number.isFinite(val) && val >= 0) {
-              onUpdateMonthlySavingsTarget(val);
-            }
-            setIsEditingSavingsTarget(false);
-          }}
-          className="space-y-4"
-        >
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-              Importe Mensual (€)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={savingsInput}
-              onChange={(e) => setSavingsInput(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-2xl bg-black border border-[#2C2C2E] text-2xl font-bold text-white focus:outline-none focus:border-[#10B981]"
-              autoFocus
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-2xl bg-[#10B981] text-black font-bold text-sm"
-          >
-            Guardar Importe
-          </button>
-        </form>
-      </BottomSheet>
-
-      {/* Bottom Sheet: Aviso de Saldo Insuficiente en DCA */}
-      <BottomSheet
-        isOpen={!!dcaErrorMsg}
-        onClose={() => setDcaErrorMsg(null)}
-        title="No se pudo ejecutar el Plan DCA"
-        subtitle="Verificación de saldo en Trade Republic"
-      >
-        <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-[#F43F5E]/15 border border-[#F43F5E]/30 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-[#F43F5E] shrink-0 mt-0.5" />
-            <p className="text-xs text-zinc-200 leading-relaxed">
-              {dcaErrorMsg}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setDcaErrorMsg(null)}
-            className="w-full py-3.5 rounded-2xl bg-zinc-800 text-white font-bold text-sm"
-          >
-            Entendido
-          </button>
-        </div>
-      </BottomSheet>
-
-      {/* Bottom Sheet: Confirmación y Ajuste Post-DCA */}
-      <BottomSheet
-        isOpen={!!postDcaItems}
-        onClose={() => setPostDcaItems(null)}
-        title="Confirmación y Ajuste Post-DCA"
-        subtitle="Ajusta cualquier decimal de tus participaciones si varió por el spread real de Trade Republic"
-      >
-        {postDcaItems && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const adjustments = postDcaItems.map((item) => {
-                const raw = postDcaShareInputs[item.assetId] || '';
-                const parsed = parseFloat(raw.replace(',', '.'));
-                return {
-                  assetId: item.assetId,
-                  finalShares: Number.isFinite(parsed)
-                    ? parsed
-                    : item.newTotalShares,
-                };
-              });
-              onSavePostDcaAdjustments(adjustments);
-              setPostDcaItems(null);
-            }}
-            className="space-y-3.5"
-          >
-            <div className="p-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 flex items-center gap-2 text-xs text-[#10B981]">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>
-                DCA descontado de Trade Republic y sumado a tu cartera.
-              </span>
-            </div>
-
-            <div className="space-y-2.5 max-h-[50dvh] overflow-y-auto pr-1">
-              {postDcaItems.map((item) => (
-                <div
-                  key={item.assetId}
-                  className="p-3 rounded-xl bg-black border border-[#2C2C2E] space-y-1.5"
-                >
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">
-                      {item.name} ({item.ticker})
-                    </span>
-                    <span className="text-[#10B981] font-semibold">
-                      +{formatEUR(item.dcaAmountEur)} (+
-                      {item.addedShares.toFixed(6)} part.)
-                    </span>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-zinc-400 mb-1">
-                      Participaciones Totales Tras Compra (Editable hasta 8
-                      decimales):
-                    </label>
-                    <input
-                      type="number"
-                      step="0.00000001"
-                      value={postDcaShareInputs[item.assetId] ?? ''}
-                      onChange={(e) =>
-                        setPostDcaShareInputs((prev) => ({
-                          ...prev,
-                          [item.assetId]: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 rounded-xl bg-[#1C1C1E] border border-[#2C2C2E] text-sm font-mono text-white"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-2xl bg-[#10B981] text-black font-bold text-sm"
-            >
-              Confirmar Participaciones Exactas
-            </button>
-          </form>
-        )}
-      </BottomSheet>
 
       {/* Bottom Sheet: Crear / Editar Ingreso o Deuda (Importe Único o Sub-pagos + Carpeta) */}
       <BottomSheet

@@ -4,8 +4,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Wallet, ArrowLeftRight, LineChart } from 'lucide-react';
 import {
   AppState,
+  MonthlyFlowConfig,
   PendingItem,
   HistoryRecord,
+  PostDcaSummaryItem,
   createBlankState,
   createDemoState,
   getPendingEffectiveAmount,
@@ -16,12 +18,15 @@ import {
   syncStateToCloud,
   fetchStateFromCloud,
 } from '@/lib/supabase';
+import { getMonthKeyFromIso } from '@/lib/monthlyFlow';
+import {
+  applySavingsTransferToState,
+  applyDcaPlanToState,
+  maybeRunAutoMonthlyFlow,
+} from '@/lib/monthlyFlowEngine';
 import { HeaderScoreboard } from '@/components/HeaderScoreboard';
 import { TabPatrimonio } from '@/components/TabPatrimonio';
-import {
-  TabPendientesFlujo,
-  PostDcaSummaryItem,
-} from '@/components/TabPendientesFlujo';
+import { TabPendientesFlujo } from '@/components/TabPendientesFlujo';
 import { TabInversiones } from '@/components/TabInversiones';
 import { SettingsSheet } from '@/components/SettingsSheet';
 
@@ -69,58 +74,73 @@ export default function FinanzaProApp() {
   }, []);
 
   // Fetch live prices in EUR from /api/prices (supports ISIN and Ticker resolution)
-  const refreshLivePrices = useCallback(async (currentAssets?: AppState['assets']) => {
-    setIsRefreshingPrices(true);
-    try {
-      const list = currentAssets || [];
-      const codes = list
-        .map((a) => a.isin || a.resolvedTicker || a.ticker)
-        .filter(Boolean)
-        .join(',');
-      const res = await fetch(
-        `/api/prices${codes ? `?tickers=${encodeURIComponent(codes)}` : ''}`
-      );
-      const data = await res.json();
-      if (data?.prices) {
-        setState((prev) => {
-          const updatedAssets = prev.assets.map((asset) => {
-            const isinKey = (asset.isin || '').toUpperCase();
-            const resolvedKey = (asset.resolvedTicker || '').toUpperCase();
-            const tickerKey = (asset.ticker || '').toUpperCase();
-            const quote =
-              (isinKey && data.prices[isinKey]) ||
-              (resolvedKey && data.prices[resolvedKey]) ||
-              (tickerKey && data.prices[tickerKey]);
-            if (!quote || !quote.priceEur) return asset;
-            const nextResolved =
-              quote.resolvedTicker || asset.resolvedTicker || asset.ticker;
-            return {
-              ...asset,
-              isin: quote.isin || asset.isin || asset.ticker,
-              ticker: nextResolved,
-              resolvedTicker: nextResolved,
-              priceEur: Number(quote.priceEur),
-              change24h: Number(quote.change24h ?? asset.change24h ?? 0),
-              currency: quote.currency || asset.currency || 'EUR',
+  const refreshLivePrices = useCallback(
+    async (currentAssets?: AppState['assets'], allowAutoFlow = false) => {
+      setIsRefreshingPrices(true);
+      try {
+        const list = currentAssets || [];
+        const codes = list
+          .map((a) => a.isin || a.resolvedTicker || a.ticker)
+          .filter(Boolean)
+          .join(',');
+        const res = await fetch(
+          `/api/prices${codes ? `?tickers=${encodeURIComponent(codes)}` : ''}`
+        );
+        const data = await res.json();
+        if (data?.prices) {
+          setState((prev) => {
+            const updatedAssets = prev.assets.map((asset) => {
+              const isinKey = (asset.isin || '').toUpperCase();
+              const resolvedKey = (asset.resolvedTicker || '').toUpperCase();
+              const tickerKey = (asset.ticker || '').toUpperCase();
+              const quote =
+                (isinKey && data.prices[isinKey]) ||
+                (resolvedKey && data.prices[resolvedKey]) ||
+                (tickerKey && data.prices[tickerKey]);
+              if (!quote || !quote.priceEur) return asset;
+              const nextResolved =
+                quote.resolvedTicker || asset.resolvedTicker || asset.ticker;
+              return {
+                ...asset,
+                isin: quote.isin || asset.isin || asset.ticker,
+                ticker: nextResolved,
+                resolvedTicker: nextResolved,
+                priceEur: Number(quote.priceEur),
+                change24h: Number(quote.change24h ?? asset.change24h ?? 0),
+                currency: quote.currency || asset.currency || 'EUR',
+              };
+            });
+            const withLivePrices: AppState = {
+              ...prev,
+              assets: updatedAssets,
+              lastPriceUpdate: data.updatedAt || new Date().toISOString(),
             };
+            if (allowAutoFlow) {
+              const autoRes = maybeRunAutoMonthlyFlow(withLivePrices);
+              if (autoRes.ran) {
+                const finalAutoState: AppState = {
+                  ...autoRes.next,
+                  updatedAt: new Date().toISOString(),
+                };
+                saveLocalState(finalAutoState);
+                syncStateToCloud(finalAutoState);
+                return finalAutoState;
+              }
+            }
+            saveLocalState(withLivePrices);
+            return withLivePrices;
           });
-          const next: AppState = {
-            ...prev,
-            assets: updatedAssets,
-            lastPriceUpdate: data.updatedAt || new Date().toISOString(),
-          };
-          saveLocalState(next);
-          return next;
-        });
+        }
+      } catch {
+        // keep existing cached prices
+      } finally {
+        setIsRefreshingPrices(false);
       }
-    } catch {
-      // keep existing cached prices
-    } finally {
-      setIsRefreshingPrices(false);
-    }
-  }, []);
+    },
+    []
+  );
 
-  // Initial load from localStorage + Cloud Sync + Live Prices
+  // Initial load from localStorage + Cloud Sync + Live Prices (+ Auto Flow check)
   useEffect(() => {
     const local = loadLocalState();
     setState(local);
@@ -145,13 +165,13 @@ export default function FinanzaProApp() {
         if (!cloudIsBlank && (localIsBlank || cloudTime >= localTime)) {
           setState(cloudState);
           saveLocalState(cloudState);
-          refreshLivePrices(cloudState.assets);
+          refreshLivePrices(cloudState.assets, true);
           return;
         } else if (!localIsBlank && cloudTime < localTime) {
           syncStateToCloud(local);
         }
       }
-      refreshLivePrices(local.assets);
+      refreshLivePrices(local.assets, true);
     });
   }, [refreshLivePrices]);
 
@@ -301,56 +321,47 @@ export default function FinanzaProApp() {
   };
 
   // ====================================================================
-  // TAB 2 HANDLERS: PENDIENTES, FLUJO MENSUAL, DCA & REVERTIR HISTORIAL
+  // FLUJO MENSUAL (AHORRO + DCA) & PENDIENTES HANDLERS
   // ====================================================================
-  const handleUpdateMonthlySavingsTarget = (amount: number) => {
-    commitState((prev) => ({ ...prev, monthlySavingsTarget: amount }));
+  const handleSaveMonthlyFlowSettings = ({
+    monthlySavingsTarget,
+    monthlyFlow,
+    assetDcaUpdates,
+  }: {
+    monthlySavingsTarget: number;
+    monthlyFlow: MonthlyFlowConfig;
+    assetDcaUpdates: { assetId: string; dcaMonthly: number; dcaEnabled: boolean }[];
+  }) => {
+    commitState((prev) => {
+      const updatedAssets = prev.assets.map((asset) => {
+        const upd = assetDcaUpdates.find((u) => u.assetId === asset.id);
+        if (!upd) return asset;
+        return {
+          ...asset,
+          dcaMonthly: upd.dcaMonthly,
+          dcaEnabled: upd.dcaEnabled,
+        };
+      });
+      const updatedState: AppState = {
+        ...prev,
+        monthlySavingsTarget,
+        monthlyFlow,
+        assets: updatedAssets,
+      };
+      if (monthlyFlow.executionMode === 'auto') {
+        return maybeRunAutoMonthlyFlow(updatedState).next;
+      }
+      return updatedState;
+    });
   };
 
-  const handleExecuteSavingsTransfer = () => {
-    commitState((prev) => {
-      const amt = Number(prev.monthlySavingsTarget || 0);
-      if (amt <= 0) return prev;
-
-      const imaginAcc =
-        prev.accounts.find((a) => a.name.toLowerCase().includes('imagin')) ||
-        prev.accounts[0];
-      const trAcc =
-        prev.accounts.find((a) => a.isTradeRepublic) ||
-        prev.accounts.find((a) =>
-          a.name.toLowerCase().includes('trade republic')
-        ) ||
-        prev.accounts[1];
-
-      if (!imaginAcc || !trAcc) return prev;
-
-      const record: HistoryRecord = {
-        id: `hist_${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        type: 'savings_transfer',
-        title: 'Traspaso Ahorro Mensual (Imagin ➔ Trade Republic)',
-        amountEur: amt,
-        reversible: true,
-        revertPayload: {
-          accountDeltas: [
-            { accountId: imaginAcc.id, delta: amt },
-            { accountId: trAcc.id, delta: -amt },
-          ],
-        },
-      };
-
-      return {
-        ...prev,
-        accounts: prev.accounts.map((a) => {
-          if (a.id === imaginAcc.id)
-            return { ...a, balance: Number((a.balance - amt).toFixed(2)) };
-          if (a.id === trAcc.id)
-            return { ...a, balance: Number((a.balance + amt).toFixed(2)) };
-          return a;
-        }),
-        history: [record, ...prev.history],
-      };
-    });
+  const handleExecuteSavingsTransfer = (): { ok: boolean; error?: string } => {
+    const check = applySavingsTransferToState(state, false);
+    if (!check.executed) {
+      return { ok: false, error: check.error };
+    }
+    commitState((prev) => applySavingsTransferToState(prev, false).next);
+    return { ok: true };
   };
 
   const handleExecuteDcaPlan = (): {
@@ -358,95 +369,12 @@ export default function FinanzaProApp() {
     error?: string;
     summary?: PostDcaSummaryItem[];
   } => {
-    const totalDca = state.assets.reduce(
-      (sum, a) => sum + Number(a.dcaMonthly || 0),
-      0
-    );
-    if (totalDca <= 0) {
-      return {
-        ok: false,
-        error: 'El importe total de DCA es 0,00 €. Configura un DCA mayor a cero.',
-      };
+    const check = applyDcaPlanToState(state, false);
+    if (!check.ok) {
+      return { ok: false, error: check.error };
     }
-
-    const trAcc =
-      state.accounts.find((a) => a.isTradeRepublic) ||
-      state.accounts.find((a) =>
-        a.name.toLowerCase().includes('trade republic')
-      );
-
-    if (!trAcc || trAcc.balance < totalDca) {
-      return {
-        ok: false,
-        error: `Saldo insuficiente en Trade Republic (Efectivo remunerado). Necesitas ${totalDca.toFixed(
-          2
-        )} € y tienes ${(trAcc?.balance || 0).toFixed(2)} €.`,
-      };
-    }
-
-    const summary: PostDcaSummaryItem[] = [];
-    const assetDeltas: NonNullable<
-      HistoryRecord['revertPayload']['assetDeltas']
-    > = [];
-
-    commitState((prev) => {
-      const updatedAssets = prev.assets.map((asset) => {
-        const dca = Number(asset.dcaMonthly || 0);
-        if (dca <= 0) return asset;
-        const price = asset.priceEur > 0 ? asset.priceEur : 1;
-        const boughtShares = Number((dca / price).toFixed(8));
-        const newTotal = Number((asset.shares + boughtShares).toFixed(8));
-
-        summary.push({
-          assetId: asset.id,
-          name: asset.name,
-          ticker: asset.ticker,
-          dcaAmountEur: dca,
-          priceEur: price,
-          addedShares: boughtShares,
-          newTotalShares: newTotal,
-        });
-
-        assetDeltas.push({
-          assetId: asset.id,
-          sharesDelta: -boughtShares,
-          costBasisDelta: -dca,
-        });
-
-        return {
-          ...asset,
-          shares: newTotal,
-          costBasis: Number((asset.costBasis + dca).toFixed(2)),
-        };
-      });
-
-      const record: HistoryRecord = {
-        id: `hist_${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        type: 'dca_execute',
-        title: 'Ejecución Plan DCA Mensual Trade Republic',
-        subtitle: `${summary.length} activos comprados desde Efectivo remunerado`,
-        amountEur: totalDca,
-        reversible: true,
-        revertPayload: {
-          accountDeltas: [{ accountId: trAcc.id, delta: totalDca }],
-          assetDeltas,
-        },
-      };
-
-      return {
-        ...prev,
-        accounts: prev.accounts.map((a) =>
-          a.id === trAcc.id
-            ? { ...a, balance: Number((a.balance - totalDca).toFixed(2)) }
-            : a
-        ),
-        assets: updatedAssets,
-        history: [record, ...prev.history],
-      };
-    });
-
-    return { ok: true, summary };
+    commitState((prev) => applyDcaPlanToState(prev, false).next);
+    return { ok: true, summary: check.summary };
   };
 
   const handleSavePostDcaAdjustments = (
@@ -677,13 +605,47 @@ export default function FinanzaProApp() {
         }
       }
 
+      const remainingHistory = prev.history.filter((h) => h.id !== recordId);
+      const recMonth = getMonthKeyFromIso(rec.timestamp);
+      const hasOtherSavingsInMonth =
+        !!recMonth &&
+        remainingHistory.some(
+          (h) =>
+            h.type === 'savings_transfer' &&
+            getMonthKeyFromIso(h.timestamp) === recMonth
+        );
+      const hasOtherDcaInMonth =
+        !!recMonth &&
+        remainingHistory.some(
+          (h) =>
+            h.type === 'dca_execute' &&
+            getMonthKeyFromIso(h.timestamp) === recMonth
+        );
+
+      const nextMonthlyFlow = prev.monthlyFlow
+        ? {
+            ...prev.monthlyFlow,
+            ...(rec.type === 'savings_transfer' &&
+            prev.monthlyFlow.lastSavingsMonth === recMonth &&
+            !hasOtherSavingsInMonth
+              ? { lastSavingsMonth: undefined }
+              : {}),
+            ...(rec.type === 'dca_execute' &&
+            prev.monthlyFlow.lastDcaMonth === recMonth &&
+            !hasOtherDcaInMonth
+              ? { lastDcaMonth: undefined }
+              : {}),
+          }
+        : prev.monthlyFlow;
+
       return {
         ...prev,
         accounts: nextAccounts,
         trAccruedInterest: nextAccrued,
         pendingItems: nextPending,
         assets: nextAssets,
-        history: prev.history.filter((h) => h.id !== recordId),
+        monthlyFlow: nextMonthlyFlow,
+        history: remainingHistory,
       };
     });
   };
@@ -951,6 +913,10 @@ export default function FinanzaProApp() {
             onUpdateTRRate={handleUpdateTRRate}
             onUpdateTRAccrued={handleUpdateTRAccrued}
             onClaimTRInterest={handleClaimTRInterest}
+            onExecuteSavingsTransfer={handleExecuteSavingsTransfer}
+            onExecuteDcaPlan={handleExecuteDcaPlan}
+            onSavePostDcaAdjustments={handleSavePostDcaAdjustments}
+            onSaveMonthlyFlowSettings={handleSaveMonthlyFlowSettings}
           />
         )}
 
@@ -958,10 +924,6 @@ export default function FinanzaProApp() {
           <TabPendientesFlujo
             state={state}
             privacyMode={privacyMode}
-            onUpdateMonthlySavingsTarget={handleUpdateMonthlySavingsTarget}
-            onExecuteSavingsTransfer={handleExecuteSavingsTransfer}
-            onExecuteDcaPlan={handleExecuteDcaPlan}
-            onSavePostDcaAdjustments={handleSavePostDcaAdjustments}
             onUpsertPendingItem={handleUpsertPendingItem}
             onDeletePendingItem={handleDeletePendingItem}
             onSettlePending={handleSettlePending}

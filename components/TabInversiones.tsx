@@ -689,7 +689,8 @@ export function TabInversiones({
               <strong className="text-[#6366F1]">
                 {formatEUR(
                   state.assets.reduce(
-                    (s, a) => s + Number(a.dcaMonthly || 0),
+                    (s, a) =>
+                      a.dcaEnabled !== false ? s + Number(a.dcaMonthly || 0) : s,
                     0
                   ),
                   privacyMode
@@ -701,13 +702,18 @@ export function TabInversiones({
           <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden flex">
             {state.assets.map((asset, idx) => {
               const val = asset.shares * asset.priceEur;
+              const activeDca = asset.dcaEnabled !== false ? asset.dcaMonthly : 0;
               const weight =
                 totalPortfolioEur > 0
                   ? (val / totalPortfolioEur) * 100
-                  : (asset.dcaMonthly /
+                  : (activeDca /
                       Math.max(
                         1,
-                        state.assets.reduce((s, a) => s + a.dcaMonthly, 0)
+                        state.assets.reduce(
+                          (s, a) =>
+                            a.dcaEnabled !== false ? s + a.dcaMonthly : s,
+                          0
+                        )
                       )) *
                     100;
               return (
@@ -856,7 +862,13 @@ export function TabInversiones({
                         : Number(asset.shares || 0).toFixed(6)}
                     </strong>
                   </span>
-                  <span className="px-2 py-0.5 rounded-lg bg-[#6366F1]/15 text-[#6366F1] font-semibold">
+                  <span
+                    className={`px-2 py-0.5 rounded-lg font-semibold ${
+                      asset.dcaEnabled !== false
+                        ? 'bg-[#6366F1]/15 text-[#6366F1]'
+                        : 'bg-zinc-800/80 text-zinc-500 line-through'
+                    }`}
+                  >
                     DCA: {formatEUR(asset.dcaMonthly, privacyMode)}/mes
                   </span>
                 </div>

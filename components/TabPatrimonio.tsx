@@ -10,8 +10,15 @@ import {
   Trash2,
   Check,
 } from 'lucide-react';
-import { AppState, BankAccount, formatEUR } from '@/lib/types';
+import {
+  AppState,
+  BankAccount,
+  MonthlyFlowConfig,
+  PostDcaSummaryItem,
+  formatEUR,
+} from '@/lib/types';
 import { BottomSheet } from './BottomSheet';
+import { MonthlyFlowBlock } from './MonthlyFlowBlock';
 
 interface TabPatrimonioProps {
   state: AppState;
@@ -27,6 +34,20 @@ interface TabPatrimonioProps {
   onUpdateTRRate: (rate: number) => void;
   onUpdateTRAccrued: (accrued: number) => void;
   onClaimTRInterest: () => void;
+  onExecuteSavingsTransfer: () => { ok: boolean; error?: string };
+  onExecuteDcaPlan: () => {
+    ok: boolean;
+    error?: string;
+    summary?: PostDcaSummaryItem[];
+  };
+  onSavePostDcaAdjustments: (
+    adjustments: { assetId: string; finalShares: number }[]
+  ) => void;
+  onSaveMonthlyFlowSettings: (params: {
+    monthlySavingsTarget: number;
+    monthlyFlow: MonthlyFlowConfig;
+    assetDcaUpdates: { assetId: string; dcaMonthly: number; dcaEnabled: boolean }[];
+  }) => void;
 }
 
 export function TabPatrimonio({
@@ -39,6 +60,10 @@ export function TabPatrimonio({
   onUpdateTRRate,
   onUpdateTRAccrued,
   onClaimTRInterest,
+  onExecuteSavingsTransfer,
+  onExecuteDcaPlan,
+  onSavePostDcaAdjustments,
+  onSaveMonthlyFlowSettings,
 }: TabPatrimonioProps) {
   // Edit Account Sheet
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(
@@ -305,6 +330,16 @@ export function TabPatrimonio({
           );
         })}
       </div>
+
+      {/* Bloque Compacto: Flujo Mensual (Ahorro + DCA) */}
+      <MonthlyFlowBlock
+        state={state}
+        privacyMode={privacyMode}
+        onExecuteSavingsTransfer={onExecuteSavingsTransfer}
+        onExecuteDcaPlan={onExecuteDcaPlan}
+        onSavePostDcaAdjustments={onSavePostDcaAdjustments}
+        onSaveMonthlyFlowSettings={onSaveMonthlyFlowSettings}
+      />
 
       {/* Bottom Sheet: Editar Cuenta / Saldo / Eliminar */}
       <BottomSheet
