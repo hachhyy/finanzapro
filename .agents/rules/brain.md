@@ -18,6 +18,8 @@ alwaysApply: true
 
 # Cuándo usar las Skills automáticamente (Solo si aplica)
 No cargues todas las skills a la vez. Activa solo la que corresponda según la tarea:
+- **Explorar o entender el proyecto (sin releer todo):** Si existe `graphify-out/graph.json`, consulta primero con `graphify query`, `graphify path` o `graphify explain` (y actualiza con `graphify update .` tras editar código). Si no existe el grafo aún, usa `graphify` para generarlo.
+- **Optimizar código y tokens:** Usa `ponytail` (`full` por defecto) para escribir el cambio mínimo completo, reutilizar lo existente y evitar sobreingeniería o líneas innecesarias.
 - **Tareas grandes (>2 archivos):** Usa `writing-plans` antes de tocar código.
 - **Pantallas y componentes nuevos:** Usa `taste-skill` por defecto para evitar diseños genéricos de IA.
 - **Errores o fallos:** Si algo se rompe o no funciona a la primera, detente y activa `systematic-debugging`.
