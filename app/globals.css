@@ -3,8 +3,9 @@
 :root {
   color-scheme: dark;
   --bg-oled: #000000;
-  --card-surface: #1C1C1E;
-  --card-border: #2C2C2E;
+  --card-surface: #121214;
+  --card-elevated: #1C1C1E;
+  --card-border: rgba(255, 255, 255, 0.08);
   --emerald: #10B981;
   --coral: #F43F5E;
   --indigo: #6366F1;
@@ -19,26 +20,45 @@ body {
   background-color: #000000;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
-  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Smooth GPU-accelerated iOS Bottom Sheet Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+/* Mobile-native rule: 16px floor on coarse pointer inputs prevents iOS Safari auto-zoom without breaking accessibility */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
 
-@keyframes sheetSlideUp {
-  from {
-    transform: translate3d(0, 100%, 0);
-  }
-  to {
-    transform: translate3d(0, 0, 0);
-  }
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Tabular numbers utility for zero-jitter financial figures and scrubbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Minimal dark scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
 }
 
 /* Hide scrollbars while keeping scroll functionality */
@@ -48,4 +68,15 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

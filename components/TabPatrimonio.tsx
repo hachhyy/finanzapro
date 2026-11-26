@@ -150,17 +150,17 @@ export function TabPatrimonio({
     <div className="space-y-4">
       {/* Cabecera de sección y botones de acción rápida */}
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
           Cuentas de Liquidez
         </h2>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={openTransferModal}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1C1C1E] border border-[#2C2C2E] text-xs font-semibold text-zinc-200 hover:text-white active:scale-95 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#121214] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white active:scale-[0.97] transition"
           >
             <ArrowLeftRight className="w-3.5 h-3.5 text-[#6366F1]" />
-            <span>⇄ Transferir entre cuentas</span>
+            <span>Transferir</span>
           </button>
           <button
             type="button"
@@ -169,16 +169,16 @@ export function TabPatrimonio({
               setNewBalance('0');
               setIsAddingAccount(true);
             }}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-xs font-semibold text-[#10B981] active:scale-95 transition"
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-xs font-semibold text-[#10B981] active:scale-[0.97] transition"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Añadir Cuenta</span>
+            <span>Añadir Cuenta</span>
           </button>
         </div>
       </div>
 
       {/* Lista de cuentas bancarias (Sin botones + / - en la tarjeta, edición tocando saldo/nombre) */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {state.accounts.map((acc) => {
           const isTR =
             acc.isTradeRepublic ||
@@ -193,7 +193,7 @@ export function TabPatrimonio({
           return (
             <div
               key={acc.id}
-              className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-4 transition pointer-events-auto"
+              className="rounded-2xl bg-[#121214] border border-white/[0.07] p-4 transition pointer-events-auto"
             >
               {/* Fila principal: Tocar nombre o saldo abre el Bottom Sheet de edición */}
               <div
@@ -216,18 +216,18 @@ export function TabPatrimonio({
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
                       isTR
-                        ? 'bg-[#6366F1]/15 border-[#6366F1]/40 text-[#6366F1]'
-                        : 'bg-zinc-800/80 border-[#2C2C2E] text-zinc-300'
+                        ? 'bg-[#6366F1]/15 border-[#6366F1]/35 text-[#6366F1]'
+                        : 'bg-white/[0.04] border-white/[0.07] text-zinc-300'
                     }`}
                   >
-                    <Landmark className="w-5 h-5" />
+                    <Landmark className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white group-hover:text-[#10B981] transition truncate">
+                    <div className="text-sm font-semibold text-white group-hover:text-[#10B981] transition truncate tracking-[-0.01em]">
                       {acc.name}
                     </div>
                     <div className="text-[11px] text-zinc-500">
-                      Toca el nombre o el saldo para editar
+                      Toca para editar saldo
                     </div>
                   </div>
                 </button>
@@ -238,9 +238,9 @@ export function TabPatrimonio({
                     e.stopPropagation();
                     openEditAccount(acc);
                   }}
-                  className="text-right px-3 py-1.5 rounded-xl bg-black/40 border border-[#2C2C2E] hover:border-zinc-600 active:scale-95 transition cursor-pointer pointer-events-auto"
+                  className="text-right px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:border-white/[0.16] active:scale-[0.97] transition cursor-pointer pointer-events-auto tabular-nums"
                 >
-                  <span className="text-lg font-bold tracking-tight text-white">
+                  <span className="text-lg font-bold tracking-[-0.02em] text-white">
                     {formatEUR(acc.balance, privacyMode)}
                   </span>
                 </button>
@@ -248,11 +248,11 @@ export function TabPatrimonio({
 
               {/* Motor de Interés Remunerado Automático (Exclusivo en Trade Republic) */}
               {isTR && (
-                <div className="mt-4 pt-3.5 border-t border-[#2C2C2E] space-y-3">
+                <div className="mt-4 pt-3.5 border-t border-white/[0.06] space-y-3 tabular-nums">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-[#6366F1]">
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Motor de Interés Remunerado</span>
+                      <span>Interés Remunerado</span>
                     </div>
                     <button
                       type="button"
@@ -260,7 +260,7 @@ export function TabPatrimonio({
                         setRateInput(String(state.trInterestRate));
                         setIsEditingRate(true);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#6366F1]/15 border border-[#6366F1]/30 text-xs font-bold text-[#6366F1] active:scale-95 transition"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#6366F1]/15 border border-[#6366F1]/30 text-xs font-bold text-[#6366F1] active:scale-[0.97] transition"
                     >
                       <Percent className="w-3 h-3" />
                       <span>{tae.toFixed(2).replace('.', ',')}% TAE</span>
@@ -268,21 +268,21 @@ export function TabPatrimonio({
                   </div>
 
                   {/* Fila limpia con las 3 proyecciones */}
-                  <div className="rounded-xl bg-black/50 border border-[#2C2C2E] px-3 py-2.5 flex items-center justify-between text-xs text-zinc-300">
+                  <div className="rounded-xl bg-black/40 border border-white/[0.06] px-3 py-2 flex items-center justify-between text-xs text-zinc-400">
                     <span>
                       <strong className="text-[#10B981]">
                         +{formatEUR(dailyInterest, privacyMode)}
                       </strong>
                       /día
                     </span>
-                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-700">•</span>
                     <span>
                       <strong className="text-[#10B981]">
                         +{formatEUR(monthlyInterest, privacyMode)}
                       </strong>
                       /mes
                     </span>
-                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-700">•</span>
                     <span>
                       <strong className="text-[#10B981]">
                         +{formatEUR(yearlyInterest, privacyMode)}
@@ -292,7 +292,7 @@ export function TabPatrimonio({
                   </div>
 
                   {/* Devengado acumulado este mes y botón de cobro Día 1 */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -301,10 +301,10 @@ export function TabPatrimonio({
                         );
                         setIsEditingAccrued(true);
                       }}
-                      className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 rounded-xl bg-zinc-900/90 border border-[#2C2C2E] text-left hover:border-[#6366F1]/50 transition"
+                      className="flex items-center justify-between sm:justify-start gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.07] text-left hover:border-[#6366F1]/50 transition"
                     >
                       <span className="text-xs text-zinc-400">
-                        Devengado acumulado este mes:
+                        Devengado este mes:
                       </span>
                       <span className="text-xs font-bold text-[#10B981]">
                         +{formatEUR(state.trAccruedInterest, privacyMode)}
@@ -317,11 +317,11 @@ export function TabPatrimonio({
                       disabled={state.trAccruedInterest <= 0}
                       className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                         state.trAccruedInterest > 0
-                          ? 'bg-[#6366F1] text-white hover:bg-[#5558E6] active:scale-95 shadow-md shadow-[#6366F1]/20'
-                          : 'bg-zinc-800/60 text-zinc-500 cursor-not-allowed'
+                          ? 'bg-[#6366F1] text-white hover:bg-[#5558E6] active:scale-[0.97]'
+                          : 'bg-white/[0.04] text-zinc-600 cursor-not-allowed'
                       }`}
                     >
-                      + Cobrar interés devengado (Día 1)
+                      Cobrar interés (Día 1)
                     </button>
                   </div>
                 </div>

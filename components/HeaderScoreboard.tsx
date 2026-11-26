@@ -50,46 +50,46 @@ export function HeaderScoreboard({
 
   return (
     <header
-      style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 3rem)' }}
-      className="sticky top-0 z-30 pointer-events-auto bg-black/95 backdrop-blur-xl border-b border-[#2C2C2E] pt-12 pb-3 px-4"
+      style={{
+        paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 2.75rem)',
+      }}
+      className="sticky top-0 z-30 pointer-events-auto bg-black/88 backdrop-blur-2xl border-b border-white/[0.07] pb-3 px-4"
     >
-      <div className="max-w-lg mx-auto space-y-3">
+      <div className="max-w-lg mx-auto space-y-2.5">
         {/* 1. Barra de Utilidades Superior */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#1C1C1E] border border-[#2C2C2E] flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-[#10B981]" />
+            <div className="w-8 h-8 rounded-xl bg-[#121214] border border-white/[0.08] flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-[#10B981]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold tracking-tight text-white">
-                  POCKET
-                </h1>
-                <span
-                  title={
-                    cloudConnected
-                      ? 'Conectado a Supabase'
-                      : 'Modo Local (Offline-First)'
-                  }
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
-                    cloudConnected
-                      ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30'
-                      : 'bg-zinc-800/80 text-zinc-400 border-[#2C2C2E]'
-                  }`}
-                >
-                  {cloudConnected ? (
-                    <>
-                      <Cloud className="w-3 h-3 text-[#10B981]" />
-                      <span>Nube</span>
-                    </>
-                  ) : (
-                    <>
-                      <CloudOff className="w-3 h-3 text-zinc-400" />
-                      <span>Local</span>
-                    </>
-                  )}
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[15px] font-bold tracking-[-0.02em] text-white">
+                POCKET
+              </h1>
+              <span
+                title={
+                  cloudConnected
+                    ? 'Conectado a Supabase'
+                    : 'Modo Local (Offline-First)'
+                }
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                  cloudConnected
+                    ? 'bg-[#10B981]/12 text-[#10B981] border-[#10B981]/25'
+                    : 'bg-white/[0.04] text-zinc-400 border-white/[0.07]'
+                }`}
+              >
+                {cloudConnected ? (
+                  <>
+                    <Cloud className="w-2.5 h-2.5 text-[#10B981]" />
+                    <span>Nube</span>
+                  </>
+                ) : (
+                  <>
+                    <CloudOff className="w-2.5 h-2.5 text-zinc-400" />
+                    <span>Local</span>
+                  </>
+                )}
+              </span>
             </div>
           </div>
 
@@ -101,8 +101,8 @@ export function HeaderScoreboard({
               title="Deshacer última acción"
               className={`flex items-center gap-1 px-2.5 py-2 rounded-xl border text-xs font-medium transition ${
                 canUndo
-                  ? 'bg-[#1C1C1E] border-[#2C2C2E] text-white hover:bg-zinc-800 active:scale-95'
-                  : 'bg-[#1C1C1E]/40 border-[#2C2C2E]/40 text-zinc-600 cursor-not-allowed'
+                  ? 'bg-[#121214] border-white/[0.08] text-white hover:bg-white/[0.06] active:scale-[0.96]'
+                  : 'bg-[#121214]/40 border-white/[0.04] text-zinc-600 cursor-not-allowed'
               }`}
             >
               <Undo2 className="w-3.5 h-3.5" />
@@ -113,7 +113,7 @@ export function HeaderScoreboard({
               type="button"
               onClick={onTogglePrivacy}
               title="Modo Privacidad"
-              className="p-2 rounded-xl bg-[#1C1C1E] border border-[#2C2C2E] text-zinc-300 hover:text-white active:scale-95 transition"
+              className="p-2 rounded-xl bg-[#121214] border border-white/[0.08] text-zinc-300 hover:text-white active:scale-[0.96] transition"
             >
               {privacyMode ? (
                 <EyeOff className="w-4 h-4 text-[#6366F1]" />
@@ -126,7 +126,7 @@ export function HeaderScoreboard({
               type="button"
               onClick={onOpenSettings}
               title="Ajustes"
-              className="p-2 rounded-xl bg-[#1C1C1E] border border-[#2C2C2E] text-zinc-300 hover:text-white active:scale-95 transition"
+              className="p-2 rounded-xl bg-[#121214] border border-white/[0.08] text-zinc-300 hover:text-white active:scale-[0.96] transition"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -136,20 +136,20 @@ export function HeaderScoreboard({
         {/* 2. Doble Marcador Contable sin Duplicidades */}
         <div className="grid grid-cols-2 gap-2.5">
           {/* Tarjeta Izquierda: DINERO REAL HOY */}
-          <div className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-3 flex flex-col justify-between">
+          <div className="rounded-2xl bg-[#121214] border border-white/[0.07] p-3 flex flex-col justify-between tabular-nums">
             <div>
               <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
                 <span>DINERO REAL HOY</span>
                 <Wallet className="w-3 h-3 text-[#10B981]" />
               </div>
-              <div className="text-lg sm:text-xl font-bold text-white mt-1 tracking-tight truncate">
+              <div className="text-lg sm:text-xl font-bold text-white mt-0.5 tracking-[-0.025em] truncate">
                 {formatEUR(dineroRealHoy, privacyMode)}
               </div>
             </div>
 
             <div className="mt-2.5 space-y-1.5">
               {/* Barra de progreso bicolor */}
-              <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden flex">
+              <div className="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden flex gap-[1px]">
                 <div
                   style={{ width: `${liquidezPct}%` }}
                   className="h-full bg-[#10B981] transition-all duration-300"
@@ -184,18 +184,18 @@ export function HeaderScoreboard({
           </div>
 
           {/* Tarjeta Derecha: DINERO FINAL ESPERADO */}
-          <div className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-3 flex flex-col justify-between">
+          <div className="rounded-2xl bg-[#121214] border border-white/[0.07] p-3 flex flex-col justify-between tabular-nums">
             <div>
               <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
                 <span>DINERO FINAL ESPERADO</span>
               </div>
-              <div className="text-lg sm:text-xl font-bold text-white mt-1 tracking-tight truncate">
+              <div className="text-lg sm:text-xl font-bold text-white mt-0.5 tracking-[-0.025em] truncate">
                 {formatEUR(dineroFinalEsperado, privacyMode)}
               </div>
             </div>
 
             <div className="mt-2.5 space-y-1.5">
-              <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden flex">
+              <div className="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden flex gap-[1px]">
                 <div
                   style={{
                     width: `${
@@ -205,7 +205,7 @@ export function HeaderScoreboard({
                         : 50
                     }%`,
                   }}
-                  className="h-full bg-[#10B981]"
+                  className="h-full bg-[#10B981] transition-all duration-300"
                 />
                 <div
                   style={{
@@ -215,7 +215,7 @@ export function HeaderScoreboard({
                         : 50
                     }%`,
                   }}
-                  className="h-full bg-[#F43F5E]"
+                  className="h-full bg-[#F43F5E] transition-all duration-300"
                 />
               </div>
 

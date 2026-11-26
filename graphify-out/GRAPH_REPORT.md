@@ -1,17 +1,17 @@
 # Graph Report - finanzapro  (2026-11-26)
 
 ## Corpus Check
-- 343 files · ~978,688 words
+- 32 files · ~23,825 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 87 file(s) not represented in the graph (top: .css 85, (none) 1, .ico 1)
+- Unclassified: 3 file(s) not represented in the graph (top: (none) 1, .ico 1, .css 1)
 
 ## Summary
-- 2763 nodes · 5876 edges · 155 communities (129 shown, 26 thin omitted)
+- 2765 nodes · 5882 edges · 155 communities (131 shown, 24 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 323 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3485e8ff`
+- Built from commit: `b1940987`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -75,7 +75,7 @@
 - clamp
 - deal.mjs
 - mountProduct
-- frag
+- contour-lines/effect.js
 - Copy registers
 - mount
 - product-render/auto.js
@@ -125,11 +125,11 @@
 - chart/route.ts
 - pElbow
 - silk-folds/effect.js
-- print-globe/object.js
+- definePrint
 - Copy tells
 - Icons
 - caustics/effect.js
-- dot-terrain/effect.js
+- palette
 - _print-core/auto.js
 - tpAdd
 - Scene objects (`assets/objects/<id>`, runtime in `_scenes`)
@@ -142,7 +142,7 @@
 - staticChecks
 - opt
 - picture-develops/moment.js
-- _print-core/demo.js
+- spotlight-cone/effect.js
 - Price and questions
 - Footers
 - Navigation
@@ -163,27 +163,27 @@
 4. `loop()` - 46 edges
 5. `shown()` - 45 edges
 6. `inFixed()` - 42 edges
-7. `palette()` - 41 edges
-8. `bag()` - 41 edges
+7. `bag()` - 41 edges
+8. `palette()` - 41 edges
 9. `mountGlobe()` - 38 edges
 10. `mountPrint()` - 35 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Light on a laptop GPU` --references--> `grounds()`  [INFERRED]
+  .agents/taste-skill-ref/design-taste-frontend/references/cards.md → .agents/taste-skill-ref/design-taste-frontend/assets/ui/ui.js
+- `Motion and cost` --references--> `mountAll()`  [INFERRED]
+  .agents/taste-skill-ref/design-taste-frontend/references/effects-usage.md → .agents/taste-skill-ref/design-taste-frontend/assets/effects/fx.js
 - `Mount: the product at anchor scale` --references--> `auto()`  [INFERRED]
   .agents/taste-skill-ref/design-taste-frontend/assets/objects/product-render/README.md → .agents/taste-skill-ref/design-taste-frontend/assets/diagrams/diagram.js
 - `Mount` --references--> `auto()`  [INFERRED]
   .agents/taste-skill-ref/design-taste-frontend/references/effects-objects.md → .agents/taste-skill-ref/design-taste-frontend/assets/diagrams/diagram.js
-- `Motion and cost` --references--> `mountAll()`  [INFERRED]
-  .agents/taste-skill-ref/design-taste-frontend/references/effects-usage.md → .agents/taste-skill-ref/design-taste-frontend/assets/effects/fx.js
-- `The eleven heroes` --references--> `collage()`  [INFERRED]
-  .agents/taste-skill-ref/design-taste-frontend/references/layout-v4.md → .agents/taste-skill-ref/design-taste-frontend/assets/layout/layout.js
 - `The still rule (every moment, no exception)` --references--> `still()`  [INFERRED]
   .agents/taste-skill-ref/design-taste-frontend/references/moments.md → .agents/taste-skill-ref/design-taste-frontend/assets/moments/lib.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (155 total, 26 thin omitted)
+## Communities (155 total, 24 thin omitted)
 
 ### Community 0 - "package.json"
 Cohesion: 0.12
@@ -199,11 +199,11 @@ Nodes (14): FALLBACK_PRICES_EUR, fetchFxRates(), fetchQuoteInEur(), GET(), yf, c
 
 ### Community 3 - "shared.js"
 Cohesion: 0.06
-Nodes (93): init(), PARAMS, init(), PARAMS, DATA, FULL, init(), MONTHS (+85 more)
+Nodes (94): init(), PARAMS, init(), PARAMS, DATA, FULL, init(), MONTHS (+86 more)
 
 ### Community 4 - "page.tsx"
-Cohesion: 0.08
-Nodes (76): ChartRange, ActiveTab, FinanzaProApp(), BottomSheet(), BottomSheetProps, AssetDcaDraft, DcaBreakdownEditor(), DcaBreakdownEditorProps (+68 more)
+Cohesion: 0.07
+Nodes (79): ChartRange, ActiveTab, FinanzaProApp(), TAB_ORDER, BottomSheet(), BottomSheetProps, AssetDcaDraft, DcaBreakdownEditor() (+71 more)
 
 ### Community 5 - "compilerOptions"
 Cohesion: 0.11
@@ -220,6 +220,10 @@ Nodes (5): metadata, viewport, nextConfig, next@16.4.5, next
 ### Community 8 - "README.md"
 Cohesion: 0.50
 Nodes (3): Deploy on Vercel, Getting Started, Learn More
+
+### Community 11 - "bootstrap.sh"
+Cohesion: 0.67
+Nodes (3): download_or_keep(), PATH, bootstrap.sh script
 
 ### Community 12 - "photo.js"
 Cohesion: 0.05
@@ -238,8 +242,8 @@ Cohesion: 0.08
 Nodes (54): ALIAS, argv, CACHE, checkCmd(), clean(), colours(), contentBox(), fetchCached() (+46 more)
 
 ### Community 16 - "dotted-globe/effect.js"
-Cohesion: 0.08
-Nodes (54): CITIES, earthSampler(), easeInOut(), easeOut(), fib(), hueIn(), LAKES, LAND (+46 more)
+Cohesion: 0.07
+Nodes (57): CITIES, earthSampler(), easeInOut(), easeOut(), fib(), hueIn(), LAKES, LAND (+49 more)
 
 ### Community 17 - "start.mjs"
 Cohesion: 0.05
@@ -251,7 +255,7 @@ Nodes (47): APART, args, attrOf(), BLOCK, brandsOf(), CAST, CAST_CO, clip() (+39
 
 ### Community 19 - "fx.js"
 Cohesion: 0.07
-Nodes (41): BASE_UNIFORMS, CALM_SPOTS, clamp(), cssToHex(), DEFAULT_PALETTE, enforceBudget(), FOCAL, FOCAL_BY_ID (+33 more)
+Nodes (44): BASE_UNIFORMS, CALM_SPOTS, clamp(), compose(), cssToHex(), DEFAULT_PALETTE, enforceBudget(), FOCAL (+36 more)
 
 ### Community 20 - "gate.mjs"
 Cohesion: 0.05
@@ -275,15 +279,15 @@ Nodes (36): calmMax(), clamp01(), coverScale(), finish(), guard(), hueDist(), is
 
 ### Community 25 - "print3d.js"
 Cohesion: 0.08
-Nodes (27): atlas, CELL, colMajor(), COMMON_PARAMS, config, cross(), DEFAULT_PALETTE, definePrint() (+19 more)
+Nodes (27): EFFECT_LABEL, PAPERS, atlas, CELL, colMajor(), COMMON_PARAMS, config, cross() (+19 more)
 
 ### Community 26 - "perf.mjs"
 Cohesion: 0.08
 Nodes (31): analyse(), args, B, child, count(), cpuSnap(), die(), exited (+23 more)
 
 ### Community 27 - "rng"
-Cohesion: 0.12
-Nodes (32): BAYER4, fallbackCSS(), hash2(), makeNoise(), mountAscii(), buildAtlas(), draw(), layout() (+24 more)
+Cohesion: 0.16
+Nodes (22): BAYER4, fallbackCSS(), hash2(), makeNoise(), mountAscii(), buildAtlas(), draw(), layout() (+14 more)
 
 ### Community 28 - "diagram.js"
 Cohesion: 0.09
@@ -318,8 +322,8 @@ Cohesion: 0.10
 Nodes (26): args, buildIndex(), checkFilters(), commands, ENUMS, FX, gallery(), INDEX (+18 more)
 
 ### Community 36 - "mountPrint"
-Cohesion: 0.14
-Nodes (25): ease(), glyphAtlas(), hexRgb(), injectStyles(), isDarkPaper(), monoFamily(), mountPrint(), adapt() (+17 more)
+Cohesion: 0.15
+Nodes (22): ease(), glyphAtlas(), hexRgb(), injectStyles(), monoFamily(), mountPrint(), adapt(), advance() (+14 more)
 
 ### Community 37 - "system.js"
 Cohesion: 0.14
@@ -350,8 +354,8 @@ Cohesion: 0.17
 Nodes (21): lit(), mount(), params, tones(), uniforms(), compile(), fallbackCSS(), HAS_WEBGL() (+13 more)
 
 ### Community 44 - "mount"
-Cohesion: 0.19
-Nodes (22): makeLayer(), mount(), calmAt(), colours(), count(), draw(), drawGrid(), drawPulse() (+14 more)
+Cohesion: 0.18
+Nodes (23): color, makeLayer(), mount(), calmAt(), colours(), count(), draw(), drawGrid() (+15 more)
 
 ### Community 45 - "layout/check.mjs"
 Cohesion: 0.09
@@ -362,8 +366,8 @@ Cohesion: 0.15
 Nodes (21): collage(), film(), init(), letters(), liveWord(), lockLines(), other(), phone() (+13 more)
 
 ### Community 47 - "grainCSS"
-Cohesion: 0.17
-Nodes (19): at(), L(), mount(), params, tones(), uniforms(), mount(), params (+11 more)
+Cohesion: 0.14
+Nodes (22): at(), L(), mount(), params, tones(), uniforms(), mount(), params (+14 more)
 
 ### Community 48 - "Cards"
 Cohesion: 0.11
@@ -382,7 +386,7 @@ Cohesion: 0.24
 Nodes (19): alpha(), banned(), blendsClean(), companion(), darkLight(), fallback(), guard(), hueGap() (+11 more)
 
 ### Community 52 - "make-posters.mjs"
-Cohesion: 0.11
+Cohesion: 0.10
 Nodes (14): args, child, guard, here, kill(), MIME, opt(), portFile (+6 more)
 
 ### Community 53 - "sleep"
@@ -390,36 +394,36 @@ Cohesion: 0.22
 Nodes (14): cropTo(), deadIoPass(), glFallbackPass(), hiddenNow(), hiddenWalk(), lose(), narrowPass(), reducedPass() (+6 more)
 
 ### Community 54 - "frameAlong"
-Cohesion: 0.16
-Nodes (19): add(), axisAngle(), axisOf(), crs(), dot(), euler(), expandProps(), frameAlong() (+11 more)
+Cohesion: 0.21
+Nodes (15): add(), axisAngle(), axisOf(), crs(), dot(), euler(), frameAlong(), fromCols() (+7 more)
 
 ### Community 55 - ".pause"
 Cohesion: 0.11
 Nodes (15): Adding an effect, Commands, Effects, Mount, Random pick, The list, Behaviour and limits, Materials (+7 more)
 
 ### Community 56 - "clamp"
-Cohesion: 0.21
-Nodes (18): clamp(), cssHex(), filmicInv(), filmicJs(), fromOklab(), gam22(), groundPalette(), lightness() (+10 more)
+Cohesion: 0.29
+Nodes (11): clamp(), filmicInv(), filmicJs(), fromOklab(), gam22(), lin22(), drawPoster(), paintColor() (+3 more)
 
 ### Community 57 - "deal.mjs"
 Cohesion: 0.15
 Nodes (16): args, darkIds(), dealOnce(), draw(), fits(), HAS, here, hero (+8 more)
 
 ### Community 58 - "mountProduct"
-Cohesion: 0.30
-Nodes (16): el(), mountProduct(), clearInner(), done(), layout(), measureStill(), mountLive(), palette() (+8 more)
+Cohesion: 0.33
+Nodes (14): mountProduct(), clearInner(), done(), layout(), measureStill(), mountLive(), renderStill(), setRole() (+6 more)
 
-### Community 59 - "frag"
-Cohesion: 0.20
-Nodes (13): fallback(), mount(), params, tones(), uniforms(), mount(), params, poolX() (+5 more)
+### Community 59 - "contour-lines/effect.js"
+Cohesion: 0.60
+Nodes (5): fallback(), mount(), params, tones(), uniforms()
 
 ### Community 60 - "Copy registers"
 Cohesion: 0.12
 Nodes (15): 0. The model's default (the one to avoid), 10. Refusal and narrowness, 11. The product as the hero, 12. Hurried and conversational, 1. Facts only, 2. Technical and dry, with proof, 3. The founder's letter, 4. Self-aware and playful (+7 more)
 
 ### Community 61 - "mount"
-Cohesion: 0.25
-Nodes (14): makeGL(), mount(), applyMask(), ctxLine(), draw(), dropSurface(), fit(), glFlush() (+6 more)
+Cohesion: 0.15
+Nodes (21): config, lifecycle(), loop(), sync(), makeGL(), makeNoise(), mount(), applyMask() (+13 more)
 
 ### Community 62 - "product-render/auto.js"
 Cohesion: 0.21
@@ -430,8 +434,8 @@ Cohesion: 0.20
 Nodes (10): init(), init(), DATA, init(), PREV, isStill(), withLoop(), init() (+2 more)
 
 ### Community 64 - "dependencies"
-Cohesion: 0.13
-Nodes (15): dependencies, clsx@^2.1.1, framer-motion@^14.10.1, lucide-react@^1.70.0, react@19.3.0, react-dom@19.3.0, recharts@^3.10.1, @supabase/supabase-js@^2.119.0 (+7 more)
+Cohesion: 0.15
+Nodes (13): dependencies, clsx@^2.1.1, lucide-react@^1.70.0, react@19.3.0, react-dom@19.3.0, recharts@^3.10.1, @supabase/supabase-js@^2.119.0, tailwind-merge@^3.7.0 (+5 more)
 
 ### Community 65 - "pick.mjs"
 Cohesion: 0.19
@@ -462,16 +466,16 @@ Cohesion: 0.28
 Nodes (12): clashes(), dealable(), filterEffects(), fitsKind(), kindOf(), KINDS, parseSlot(), pick() (+4 more)
 
 ### Community 72 - "line-engraving/effect.js"
-Cohesion: 0.35
-Nodes (11): clamp(), f1(), fallback(), holdStill(), inkOf(), layout(), lin(), mount() (+3 more)
+Cohesion: 0.32
+Nodes (12): resolveParams(), clamp(), f1(), fallback(), holdStill(), inkOf(), layout(), lin() (+4 more)
 
 ### Community 73 - "start"
 Cohesion: 0.29
 Nodes (12): acquire(), finishProgram(), onLost(), showFallback(), start(), stop(), sync(), poolCap() (+4 more)
 
 ### Community 74 - "build"
-Cohesion: 0.29
-Nodes (12): build(), checkSpec(), colorOf(), f(), frameView(), m3(), makeProduct(), materialGlsl() (+4 more)
+Cohesion: 0.20
+Nodes (16): build(), checkSpec(), colorOf(), expandProps(), f(), frameView(), localSamples(), m3() (+8 more)
 
 ### Community 75 - "Copy moves"
 Cohesion: 0.17
@@ -605,6 +609,10 @@ Nodes (7): joint(), outline(), P(), pCurve(), pElbow(), pLine(), r1()
 Cohesion: 0.52
 Nodes (6): cool(), mount(), params, sheenTurn(), tones(), uniforms()
 
+### Community 109 - "definePrint"
+Cohesion: 0.15
+Nodes (5): definePrint(), formShader(), sources(), LAKES, LAND
+
 ### Community 110 - "Copy tells"
 Cohesion: 0.29
 Nodes (6): Copy tells, First generation: the old tells (mostly avoided now; still checked), Not tells (leave them alone), Over-correction: what the rules themselves produce, Second generation: the tells now, Why it happens
@@ -617,9 +625,9 @@ Nodes (6): Commands, How they sit, Icons, The violet rule (a judgement, stated),
 Cohesion: 0.60
 Nodes (5): mount(), params, tones(), uniforms(), violet()
 
-### Community 113 - "dot-terrain/effect.js"
-Cohesion: 0.60
-Nodes (5): fallback(), mount(), params, tones(), uniforms()
+### Community 113 - "palette"
+Cohesion: 0.35
+Nodes (11): cssHex(), groundPalette(), isDarkPaper(), lightness(), mixColor(), loadPoster(), posterFile(), normalizePalette() (+3 more)
 
 ### Community 114 - "_print-core/auto.js"
 Cohesion: 0.47
@@ -665,9 +673,9 @@ Nodes (6): codeOnly(), hashOf(), kitIndex(), kitTwin(), norm(), staticChecks()
 Cohesion: 0.33
 Nodes (6): freshProfile(), inProject(), opt(), profileBase(), roundsArg(), str()
 
-### Community 126 - "_print-core/demo.js"
-Cohesion: 0.40
-Nodes (3): EFFECT_LABEL, PAPERS, EFFECTS
+### Community 126 - "spotlight-cone/effect.js"
+Cohesion: 0.67
+Nodes (5): mount(), params, poolX(), tones(), uniforms()
 
 ### Community 127 - "Price and questions"
 Cohesion: 0.40
@@ -702,23 +710,23 @@ Cohesion: 0.50
 Nodes (4): glslIn(), isGLSL(), lintGLSL(), shaderLint()
 
 ## Knowledge Gaps
-- **1 isolated node(s):** `{ color, normalizePalette, readPalette, GLSL_LIB }`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1005 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2 isolated node(s):** `PATH`, `{ color, normalizePalette, readPalette, GLSL_LIB }`
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1004 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `lib()` connect `lib` to `consistency.mjs`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._
 - **Are the 51 inferred relationships involving `lib()` (e.g. with `arrive()` and `audit()`) actually correct?**
   _`lib()` has 51 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `{ color, normalizePalette, readPalette, GLSL_LIB }` to the rest of the system?**
-  _1 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `PATH`, `{ color, normalizePalette, readPalette, GLSL_LIB }` to the rest of the system?**
+  _2 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.1225296442687747 - nodes in this community are weakly interconnected._
-- **Why does `gl()` connect `photo.js` to `start`, `shader`, `scenes/lib.js`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+- **Why does `mountAll()` connect `fx.js` to `ui.js`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `shader()` (e.g. with `fx.js` and `draw()`) actually correct?**
   _`shader()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Should `lib` be split into smaller, more focused modules?**

@@ -118,8 +118,8 @@ export function MonthlyFlowBlock({
     : `Día programado: ${flow.scheduledDay} · Pendiente`;
 
   return (
-    <section className="pt-2 pb-2">
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-4 space-y-3">
+    <section className="pt-1 pb-2">
+      <div className="rounded-2xl bg-[#121214] border border-white/[0.07] p-4 space-y-3 tabular-nums">
         {/* Cabecera Compacta */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2.5 min-w-0">
@@ -127,7 +127,7 @@ export function MonthlyFlowBlock({
               <Sparkles className="w-4 h-4 text-[#6366F1]" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm font-bold text-white leading-tight">
+              <h3 className="text-sm font-semibold text-white leading-tight tracking-[-0.01em]">
                 Flujo Mensual (Ahorro y DCA)
               </h3>
               <p
@@ -149,7 +149,7 @@ export function MonthlyFlowBlock({
             onClick={() => setIsSettingsOpen(true)}
             title="Ajustes del Flujo Mensual"
             aria-label="Ajustes del Flujo Mensual"
-            className="p-2 rounded-xl bg-black/60 border border-[#2C2C2E] text-zinc-300 hover:text-white hover:border-[#6366F1]/50 active:scale-95 transition shrink-0"
+            className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:text-white hover:border-[#6366F1]/50 active:scale-[0.96] transition shrink-0"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -173,7 +173,7 @@ export function MonthlyFlowBlock({
         )}
 
         {/* Acción 1: Traspaso de Ahorro (1 clic) */}
-        <div className="p-3 rounded-xl bg-black/50 border border-[#2C2C2E] space-y-2">
+        <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs font-semibold text-zinc-200 truncate">
@@ -183,7 +183,7 @@ export function MonthlyFlowBlock({
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
               )}
             </div>
-            <span className="px-2 py-0.5 rounded-lg bg-zinc-900 border border-[#2C2C2E] text-xs font-bold text-[#10B981] shrink-0">
+            <span className="px-2 py-0.5 rounded-lg bg-white/[0.04] border border-white/[0.07] text-xs font-bold text-[#10B981] shrink-0">
               {formatEUR(savingsAmount, privacyMode)}
             </span>
           </div>
@@ -191,7 +191,7 @@ export function MonthlyFlowBlock({
           <button
             type="button"
             onClick={handleRunSavings}
-            className="w-full py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+            className="w-full py-2.5 px-3 rounded-xl bg-white/[0.07] hover:bg-white/[0.11] text-white text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
           >
             <span>
               Traspasar Ahorro ({formatEUR(savingsAmount, privacyMode)})
@@ -201,7 +201,7 @@ export function MonthlyFlowBlock({
         </div>
 
         {/* Acción 2: Plan DCA (1 clic) */}
-        <div className="p-3 rounded-xl bg-[#6366F1]/10 border border-[#6366F1]/30 space-y-2">
+        <div className="p-3 rounded-xl bg-[#6366F1]/[0.08] border border-[#6366F1]/25 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs font-semibold text-zinc-100 truncate">
@@ -219,7 +219,7 @@ export function MonthlyFlowBlock({
           <button
             type="button"
             onClick={handleTriggerDca}
-            className="w-full py-2.5 px-3 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-[0.98] transition shadow-lg shadow-[#6366F1]/25"
+            className="w-full py-2.5 px-3 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
           >
             <span>
               Ejecutar Plan DCA ({formatEUR(activeDcaTotal, privacyMode)})

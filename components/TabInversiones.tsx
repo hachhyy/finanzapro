@@ -143,6 +143,8 @@ export function TabInversiones({
   const [portfolioRange, setPortfolioRange] = useState<ChartRange>('1M');
   const [portfolioSeries, setPortfolioSeries] = useState<ChartPoint[]>([]);
   const [portfolioChartLoading, setPortfolioChartLoading] = useState(false);
+  const [portfolioHoverPoint, setPortfolioHoverPoint] =
+    useState<ChartPoint | null>(null);
 
   // Fase 3: Alta rápida en 1 paso por ISIN / Código
   const [isAddingAsset, setIsAddingAsset] = useState(false);
@@ -617,17 +619,22 @@ export function TabInversiones({
   return (
     <div className="space-y-5">
       {/* 1. Cabecera de Cartera y Gráfico General Interactivo */}
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-4 space-y-4">
+      <div className="rounded-2xl bg-[#121214] border border-white/[0.07] p-4 space-y-4">
         <div className="flex items-start justify-between gap-2">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
               Valor Total Cartera Trade Republic
             </div>
-            <div className="text-3xl font-extrabold tracking-tight text-white mt-0.5">
-              {formatEUR(totalPortfolioEur, privacyMode)}
+            <div className="text-3xl font-extrabold tracking-[-0.03em] text-white mt-0.5 tabular-nums">
+              {formatEUR(
+                portfolioHoverPoint
+                  ? portfolioHoverPoint.priceEur
+                  : totalPortfolioEur,
+                privacyMode
+              )}
             </div>
 
-            <div className="flex items-center gap-2 mt-1.5 text-xs">
+            <div className="flex items-center gap-2 mt-1.5 text-xs tabular-nums">
               <span
                 className={`font-bold ${
                   totalReturnEur >= 0 ? 'text-[#10B981]' : 'text-[#F43F5E]'
@@ -637,7 +644,7 @@ export function TabInversiones({
                 {totalReturnPct >= 0 ? '+' : ''}
                 {totalReturnPct.toFixed(2)}%)
               </span>
-              <span className="text-zinc-500">•</span>
+              <span className="text-zinc-600">•</span>
               <span className="text-zinc-400">
                 Invertido: {formatEUR(totalCostBasis, privacyMode)}
               </span>
@@ -648,7 +655,7 @@ export function TabInversiones({
             type="button"
             onClick={onRefreshPrices}
             disabled={isRefreshingPrices}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 border border-[#2C2C2E] text-xs font-semibold text-zinc-200 hover:text-white active:scale-95 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white active:scale-[0.97] transition"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 text-[#10B981] ${
@@ -660,7 +667,7 @@ export function TabInversiones({
         </div>
 
         {state.lastPriceUpdate && (
-          <div className="text-[10px] text-zinc-500">
+          <div className="text-[10px] text-zinc-500 tabular-nums">
             Última actualización Yahoo Finance (EUR):{' '}
             {new Date(state.lastPriceUpdate).toLocaleTimeString('es-ES', {
               hour: '2-digit',
@@ -678,11 +685,12 @@ export function TabInversiones({
           privacyMode={privacyMode}
           height={185}
           loading={portfolioChartLoading}
+          onScrubPoint={setPortfolioHoverPoint}
         />
 
         {/* Barra de distribución porcentual de la cartera */}
         <div className="pt-2 space-y-2">
-          <div className="flex items-center justify-between text-[11px] text-zinc-400">
+          <div className="flex items-center justify-between text-[11px] text-zinc-400 tabular-nums">
             <span>Distribución de Cartera</span>
             <span>
               Plan DCA Mensual:{' '}
@@ -699,7 +707,7 @@ export function TabInversiones({
             </span>
           </div>
 
-          <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden flex">
+          <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden flex gap-[1px]">
             {state.assets.map((asset, idx) => {
               const val = asset.shares * asset.priceEur;
               const activeDca = asset.dcaEnabled !== false ? asset.dcaMonthly : 0;
@@ -736,7 +744,7 @@ export function TabInversiones({
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
               Posiciones y Plan DCA ({state.assets.length} activos)
             </h2>
             <p className="text-[11px] text-zinc-500">
@@ -756,7 +764,7 @@ export function TabInversiones({
               setNewAssetDca('10');
               setIsAddingAsset(true);
             }}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#6366F1]/15 border border-[#6366F1]/30 text-xs font-semibold text-[#6366F1] active:scale-95 transition shrink-0"
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#6366F1]/15 border border-[#6366F1]/30 text-xs font-semibold text-[#6366F1] active:scale-[0.97] transition shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Añadir por ISIN / Código</span>
@@ -780,16 +788,16 @@ export function TabInversiones({
                 key={asset.id}
                 type="button"
                 onClick={() => openAssetDetail(asset)}
-                className="w-full text-left rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] hover:border-zinc-600 p-4 transition active:scale-[0.99]"
+                className="w-full text-left rounded-2xl bg-[#121214] border border-white/[0.07] hover:border-white/[0.15] p-4 transition active:scale-[0.985]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0 border border-white/10"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0 border border-white/[0.08]"
                       style={{
                         backgroundColor: `${
                           ASSET_COLORS[idx % ASSET_COLORS.length]
-                        }25`,
+                        }20`,
                         color: ASSET_COLORS[idx % ASSET_COLORS.length],
                       }}
                     >
@@ -797,19 +805,19 @@ export function TabInversiones({
                     </div>
 
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-white truncate">
+                      <div className="text-sm font-semibold text-white truncate tracking-[-0.01em]">
                         {asset.name}
                       </div>
-                      <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-400 mt-0.5">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-400 mt-0.5 tabular-nums">
                         {displayIsin && (
-                          <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono text-[10px] text-zinc-300">
+                          <span className="px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.07] font-mono text-[10px] text-zinc-300">
                             {displayIsin}
                           </span>
                         )}
                         <span className="font-mono text-zinc-300">
                           {displayTicker}
                         </span>
-                        <span>•</span>
+                        <span className="text-zinc-600">•</span>
                         <span>
                           {formatEUR(asset.priceEur, privacyMode)}
                         </span>
@@ -831,8 +839,8 @@ export function TabInversiones({
                   </div>
 
                   {/* Valor actual de mi posición */}
-                  <div className="text-right shrink-0">
-                    <div className="text-base font-bold text-white">
+                  <div className="text-right shrink-0 tabular-nums">
+                    <div className="text-base font-bold text-white tracking-tight">
                       {formatEUR(positionEur, privacyMode)}
                     </div>
                     <div
@@ -853,7 +861,7 @@ export function TabInversiones({
                 </div>
 
                 {/* Fila inferior: Participaciones exactas y asignación DCA */}
-                <div className="mt-3 pt-2.5 border-t border-[#2C2C2E]/80 flex items-center justify-between text-[11px] text-zinc-400">
+                <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400 tabular-nums">
                   <span>
                     Participaciones:{' '}
                     <strong className="text-zinc-200 font-mono">
@@ -866,7 +874,7 @@ export function TabInversiones({
                     className={`px-2 py-0.5 rounded-lg font-semibold ${
                       asset.dcaEnabled !== false
                         ? 'bg-[#6366F1]/15 text-[#6366F1]'
-                        : 'bg-zinc-800/80 text-zinc-500 line-through'
+                        : 'bg-white/[0.05] text-zinc-500 line-through'
                     }`}
                   >
                     DCA: {formatEUR(asset.dcaMonthly, privacyMode)}/mes

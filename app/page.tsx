@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Wallet, ArrowLeftRight, LineChart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AppState,
   MonthlyFlowConfig,
@@ -31,6 +32,7 @@ import { TabInversiones } from '@/components/TabInversiones';
 import { SettingsSheet } from '@/components/SettingsSheet';
 
 type ActiveTab = 'patrimonio' | 'pendientes' | 'inversiones';
+const TAB_ORDER: ActiveTab[] = ['patrimonio', 'pendientes', 'inversiones'];
 
 export default function FinanzaProApp() {
   const [state, setState] = useState<AppState>(() => createBlankState());
@@ -38,8 +40,23 @@ export default function FinanzaProApp() {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [cloudConnected, setCloudConnected] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('patrimonio');
+  const [tabDirection, setTabDirection] = useState<number>(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
+  const swipeStartRef = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null);
+
+  const switchTab = useCallback(
+    (nextTab: ActiveTab) => {
+      setActiveTab((curr) => {
+        if (curr === nextTab) return curr;
+        const currIdx = TAB_ORDER.indexOf(curr);
+        const nextIdx = TAB_ORDER.indexOf(nextTab);
+        setTabDirection(nextIdx > currIdx ? 1 : -1);
+        return nextTab;
+      });
+    },
+    []
+  );
 
   // Persist helper with 15-state undo memory + instant localStorage + background Supabase sync
   const commitState = useCallback(
@@ -895,55 +912,99 @@ export default function FinanzaProApp() {
         deudasTotal={deudasTotal}
       />
 
-      {/* CONTENIDO DE LA PESTAÑA ACTIVA */}
+      {/* CONTENIDO DE LA PESTAÑA ACTIVA (con soporte de deslizamiento horizontal entre pestañas) */}
       <main
         style={{
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)',
         }}
-        className="relative z-10 pointer-events-auto flex-1 w-full max-w-lg mx-auto px-4 pt-4 pb-32"
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          if (!touch) return;
+          swipeStartRef.current = {
+            x: touch.clientX,
+            y: touch.clientY,
+            target: e.target,
+          };
+        }}
+        onTouchEnd={(e) => {
+          const start = swipeStartRef.current;
+          swipeStartRef.current = null;
+          if (!start) return;
+          const el = start.target as HTMLElement | null;
+          if (
+            el &&
+            el.closest('input, textarea, select, .recharts-wrapper, [role="dialog"]')
+          ) {
+            return;
+          }
+          const touch = e.changedTouches[0];
+          if (!touch) return;
+          const dx = touch.clientX - start.x;
+          const dy = touch.clientY - start.y;
+          if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+            const idx = TAB_ORDER.indexOf(activeTab);
+            if (dx < 0 && idx < TAB_ORDER.length - 1) {
+              switchTab(TAB_ORDER[idx + 1]);
+            } else if (dx > 0 && idx > 0) {
+              switchTab(TAB_ORDER[idx - 1]);
+            }
+          }
+        }}
+        className="relative z-10 pointer-events-auto flex-1 w-full max-w-lg mx-auto px-4 pt-4 pb-32 overflow-x-hidden"
       >
-        {activeTab === 'patrimonio' && (
-          <TabPatrimonio
-            state={state}
-            privacyMode={privacyMode}
-            onUpdateAccount={handleUpdateAccount}
-            onAddAccount={handleAddAccount}
-            onDeleteAccount={handleDeleteAccount}
-            onTransferBetweenAccounts={handleTransferBetweenAccounts}
-            onUpdateTRRate={handleUpdateTRRate}
-            onUpdateTRAccrued={handleUpdateTRAccrued}
-            onClaimTRInterest={handleClaimTRInterest}
-            onExecuteSavingsTransfer={handleExecuteSavingsTransfer}
-            onExecuteDcaPlan={handleExecuteDcaPlan}
-            onSavePostDcaAdjustments={handleSavePostDcaAdjustments}
-            onSaveMonthlyFlowSettings={handleSaveMonthlyFlowSettings}
-          />
-        )}
+        <AnimatePresence mode="wait" initial={false} custom={tabDirection}>
+          <motion.div
+            key={activeTab}
+            custom={tabDirection}
+            initial={{ opacity: 0, x: tabDirection * 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: tabDirection * -18 }}
+            transition={{ type: 'spring', bounce: 0, duration: 0.28 }}
+          >
+            {activeTab === 'patrimonio' && (
+              <TabPatrimonio
+                state={state}
+                privacyMode={privacyMode}
+                onUpdateAccount={handleUpdateAccount}
+                onAddAccount={handleAddAccount}
+                onDeleteAccount={handleDeleteAccount}
+                onTransferBetweenAccounts={handleTransferBetweenAccounts}
+                onUpdateTRRate={handleUpdateTRRate}
+                onUpdateTRAccrued={handleUpdateTRAccrued}
+                onClaimTRInterest={handleClaimTRInterest}
+                onExecuteSavingsTransfer={handleExecuteSavingsTransfer}
+                onExecuteDcaPlan={handleExecuteDcaPlan}
+                onSavePostDcaAdjustments={handleSavePostDcaAdjustments}
+                onSaveMonthlyFlowSettings={handleSaveMonthlyFlowSettings}
+              />
+            )}
 
-        {activeTab === 'pendientes' && (
-          <TabPendientesFlujo
-            state={state}
-            privacyMode={privacyMode}
-            onUpsertPendingItem={handleUpsertPendingItem}
-            onDeletePendingItem={handleDeletePendingItem}
-            onSettlePending={handleSettlePending}
-            onRevertHistoryRecord={handleRevertHistoryRecord}
-          />
-        )}
+            {activeTab === 'pendientes' && (
+              <TabPendientesFlujo
+                state={state}
+                privacyMode={privacyMode}
+                onUpsertPendingItem={handleUpsertPendingItem}
+                onDeletePendingItem={handleDeletePendingItem}
+                onSettlePending={handleSettlePending}
+                onRevertHistoryRecord={handleRevertHistoryRecord}
+              />
+            )}
 
-        {activeTab === 'inversiones' && (
-          <TabInversiones
-            state={state}
-            privacyMode={privacyMode}
-            isRefreshingPrices={isRefreshingPrices}
-            onRefreshPrices={() => refreshLivePrices(state.assets)}
-            onAddAsset={handleAddAsset}
-            onUpdateAssetPosition={handleUpdateAssetPosition}
-            onDeleteAsset={handleDeleteAsset}
-            onBuyAssetManual={handleBuyAssetManual}
-            onSellAssetManual={handleSellAssetManual}
-          />
-        )}
+            {activeTab === 'inversiones' && (
+              <TabInversiones
+                state={state}
+                privacyMode={privacyMode}
+                isRefreshingPrices={isRefreshingPrices}
+                onRefreshPrices={() => refreshLivePrices(state.assets)}
+                onAddAsset={handleAddAsset}
+                onUpdateAssetPosition={handleUpdateAssetPosition}
+                onDeleteAsset={handleDeleteAsset}
+                onBuyAssetManual={handleBuyAssetManual}
+                onSellAssetManual={handleSellAssetManual}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* BARRA DE NAVEGACIÓN INFERIOR ESTILO iOS / TRADE REPUBLIC */}
@@ -951,49 +1012,58 @@ export default function FinanzaProApp() {
         style={{
           paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0.5rem)',
         }}
-        className="fixed bottom-0 inset-x-0 z-40 pointer-events-auto bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-[#2C2C2E]"
+        className="fixed bottom-0 inset-x-0 z-40 pointer-events-auto bg-[#0C0C0E]/90 backdrop-blur-2xl border-t border-white/[0.08]"
       >
-        <div className="relative z-40 pointer-events-auto max-w-lg mx-auto grid grid-cols-3 px-2 pt-2 pb-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab('patrimonio')}
-            className={`flex flex-col items-center justify-center py-2 rounded-2xl transition cursor-pointer pointer-events-auto ${
-              activeTab === 'patrimonio'
-                ? 'text-[#10B981] bg-white/5'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Wallet className="w-5 h-5" />
-            <span className="text-[11px] font-semibold mt-1">Patrimonio</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('pendientes')}
-            className={`flex flex-col items-center justify-center py-2 rounded-2xl transition cursor-pointer pointer-events-auto ${
-              activeTab === 'pendientes'
-                ? 'text-[#6366F1] bg-white/5'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <ArrowLeftRight className="w-5 h-5" />
-            <span className="text-[11px] font-semibold mt-1">
-              Pendientes y Flujo
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('inversiones')}
-            className={`flex flex-col items-center justify-center py-2 rounded-2xl transition cursor-pointer pointer-events-auto ${
-              activeTab === 'inversiones'
-                ? 'text-[#10B981] bg-white/5'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <LineChart className="w-5 h-5" />
-            <span className="text-[11px] font-semibold mt-1">Inversiones</span>
-          </button>
+        <div className="relative z-40 pointer-events-auto max-w-lg mx-auto grid grid-cols-3 gap-1 px-2.5 pt-1.5 pb-1">
+          {(
+            [
+              {
+                id: 'patrimonio' as ActiveTab,
+                label: 'Patrimonio',
+                icon: Wallet,
+                activeColor: 'text-[#10B981]',
+              },
+              {
+                id: 'pendientes' as ActiveTab,
+                label: 'Pendientes y Flujo',
+                icon: ArrowLeftRight,
+                activeColor: 'text-[#6366F1]',
+              },
+              {
+                id: 'inversiones' as ActiveTab,
+                label: 'Inversiones',
+                icon: LineChart,
+                activeColor: 'text-[#10B981]',
+              },
+            ] as const
+          ).map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => switchTab(tab.id)}
+                className={`relative flex flex-col items-center justify-center py-2 rounded-2xl transition-colors cursor-pointer pointer-events-auto active:scale-[0.97] ${
+                  isActive
+                    ? tab.activeColor
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="bottomNavActivePill"
+                    transition={{ type: 'spring', bounce: 0, duration: 0.34 }}
+                    className="absolute inset-0 rounded-2xl bg-white/[0.06] border border-white/[0.07]"
+                  />
+                )}
+                <Icon className="relative z-10 w-5 h-5" />
+                <span className="relative z-10 text-[11px] font-semibold mt-1 tracking-[-0.01em]">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </nav>
 
